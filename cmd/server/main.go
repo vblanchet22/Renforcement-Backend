@@ -3,36 +3,32 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/joho/godotenv"
-	"github.com/vblanchet22/back_coloc/internal/database"
-	"github.com/vblanchet22/back_coloc/internal/handlers"
-	"github.com/vblanchet22/back_coloc/internal/repository"
+	"github.com/vblanchet22/back_coloc/internal/config"
+	handler "github.com/vblanchet22/back_coloc/internal/grpc"
+	"github.com/vblanchet22/back_coloc/internal/repository/postgres"
 )
 
 func main() {
-	// Charger les variables d'environnement
 	if err := godotenv.Load(); err != nil {
-		log.Println("Aucun fichier .env trouvé, utilisation des valeurs par défaut")
+		log.Println("Aucun fichier .env trouve, utilisation des valeurs par defaut")
 	}
 
-	// Connexion à la base de données
-	db, err := database.Connect()
+	cfg := config.Load()
+
+	pool, err := postgres.Connect(&cfg.Database)
 	if err != nil {
-		log.Fatalf("Erreur de connexion à la base de données: %v", err)
+		log.Fatalf("Erreur de connexion a la base de donnees: %v", err)
 	}
-	defer db.Close()
+	defer pool.Close()
 
-	// Initialiser le repository et les handlers
-	userRepo := repository.NewUserRepository(db)
-	userHandler := handlers.NewUserHandler(userRepo)
+	userRepo := postgres.NewUserRepository(pool)
+	userHandler := handler.NewUserHandler(userRepo)
 
-	// Configuration des routes
 	mux := http.NewServeMux()
 
-	// Routes API pour les utilisateurs
 	mux.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -40,12 +36,11 @@ func main() {
 		case http.MethodPost:
 			userHandler.CreateUser(w, r)
 		default:
-			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+			http.Error(w, "Methode non autorisee", http.StatusMethodNotAllowed)
 		}
 	})
 
 	mux.HandleFunc("/api/users/", func(w http.ResponseWriter, r *http.Request) {
-		// Vérifier qu'il y a bien un ID après /api/users/
 		path := strings.TrimPrefix(r.URL.Path, "/api/users/")
 		if path == "" {
 			http.Error(w, "ID manquant", http.StatusBadRequest)
@@ -60,26 +55,21 @@ func main() {
 		case http.MethodDelete:
 			userHandler.DeleteUser(w, r)
 		default:
-			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+			http.Error(w, "Methode non autorisee", http.StatusMethodNotAllowed)
 		}
 	})
 
-	// Route de santé
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
 
-	// Port du serveur
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := cfg.Server.HTTPPort
 
-	log.Printf("🚀 Serveur démarré sur le port %s", port)
-	log.Printf("📡 API disponible sur http://localhost:%s/api/users", port)
+	log.Printf("Serveur demarre sur le port %s", port)
+	log.Printf("API disponible sur http://localhost:%s/api/users", port)
 
 	if err := http.ListenAndServe(":"+port, mux); err != nil {
-		log.Fatalf("Erreur lors du démarrage du serveur: %v", err)
+		log.Fatalf("Erreur lors du demarrage du serveur: %v", err)
 	}
 }

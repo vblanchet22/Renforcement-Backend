@@ -1,37 +1,36 @@
-package handlers
+package handler
 
 import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/vblanchet22/back_coloc/internal/models"
-	"github.com/vblanchet22/back_coloc/internal/repository"
+	"github.com/vblanchet22/back_coloc/internal/domain"
+	"github.com/vblanchet22/back_coloc/internal/repository/postgres"
 	"github.com/vblanchet22/back_coloc/internal/utils"
 )
 
-// UserHandler gère les requêtes HTTP liées aux utilisateurs
+// UserHandler manages HTTP requests for users
 type UserHandler struct {
-	repo *repository.UserRepository
+	repo *postgres.UserRepository
 }
 
-// NewUserHandler crée un nouveau gestionnaire d'utilisateurs
-func NewUserHandler(repo *repository.UserRepository) *UserHandler {
+// NewUserHandler creates a new user handler
+func NewUserHandler(repo *postgres.UserRepository) *UserHandler {
 	return &UserHandler{repo: repo}
 }
 
-// UserResponse représente un utilisateur avec les dates formatées en français
+// UserResponse represents a user with French-formatted dates
 type UserResponse struct {
 	ID        string  `json:"id"`
 	Email     string  `json:"email"`
 	Nom       string  `json:"nom"`
 	Prenom    string  `json:"prenom"`
 	Telephone *string `json:"telephone,omitempty"`
-	CreatedAt string  `json:"created_at"` // Format français: "21/12/2025 14:30:45"
-	UpdatedAt string  `json:"updated_at"` // Format français: "21/12/2025 14:30:45"
+	CreatedAt string  `json:"created_at"`
+	UpdatedAt string  `json:"updated_at"`
 }
 
-// toUserResponse convertit un modèle User en UserResponse avec dates françaises
-func toUserResponse(user *models.User) UserResponse {
+func toUserResponse(user *domain.User) UserResponse {
 	return UserResponse{
 		ID:        user.ID,
 		Email:     user.Email,
@@ -43,21 +42,19 @@ func toUserResponse(user *models.User) UserResponse {
 	}
 }
 
-// GetAllUsers récupère tous les utilisateurs
-// GET /api/users
+// GetAllUsers retrieves all users
 func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		http.Error(w, "Methode non autorisee", http.StatusMethodNotAllowed)
 		return
 	}
 
-	users, err := h.repo.GetAll()
+	users, err := h.repo.GetAll(r.Context())
 	if err != nil {
-		http.Error(w, "Erreur lors de la récupération des utilisateurs", http.StatusInternalServerError)
+		http.Error(w, "Erreur lors de la recuperation des utilisateurs", http.StatusInternalServerError)
 		return
 	}
 
-	// Convertir en UserResponse avec dates françaises
 	response := make([]UserResponse, len(users))
 	for i, user := range users {
 		response[i] = toUserResponse(&user)
@@ -67,29 +64,27 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// GetUserByID récupère un utilisateur par son ID
-// GET /api/users/{id}
+// GetUserByID retrieves a user by ID
 func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		http.Error(w, "Methode non autorisee", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Extraire l'ID depuis le path
 	id := r.URL.Path[len("/api/users/"):]
 	if id == "" {
 		http.Error(w, "ID manquant", http.StatusBadRequest)
 		return
 	}
 
-	user, err := h.repo.GetByID(id)
+	user, err := h.repo.GetByID(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Erreur lors de la récupération de l'utilisateur", http.StatusInternalServerError)
+		http.Error(w, "Erreur lors de la recuperation de l'utilisateur", http.StatusInternalServerError)
 		return
 	}
 
 	if user == nil {
-		http.Error(w, "Utilisateur non trouvé", http.StatusNotFound)
+		http.Error(w, "Utilisateur non trouve", http.StatusNotFound)
 		return
 	}
 
@@ -98,7 +93,7 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// CreateUserRequest représente les données pour créer un utilisateur
+// CreateUserRequest represents the data to create a user
 type CreateUserRequest struct {
 	Email     string  `json:"email"`
 	Nom       string  `json:"nom"`
@@ -106,35 +101,33 @@ type CreateUserRequest struct {
 	Telephone *string `json:"telephone,omitempty"`
 }
 
-// CreateUser crée un nouvel utilisateur
-// POST /api/users
+// CreateUser creates a new user
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		http.Error(w, "Methode non autorisee", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var req CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Données invalides", http.StatusBadRequest)
+		http.Error(w, "Donnees invalides", http.StatusBadRequest)
 		return
 	}
 
-	// Validation basique
 	if req.Email == "" || req.Nom == "" || req.Prenom == "" {
-		http.Error(w, "Email, nom et prénom sont obligatoires", http.StatusBadRequest)
+		http.Error(w, "Email, nom et prenom sont obligatoires", http.StatusBadRequest)
 		return
 	}
 
-	user := &models.User{
+	user := &domain.User{
 		Email:     req.Email,
 		Nom:       req.Nom,
 		Prenom:    req.Prenom,
 		Telephone: req.Telephone,
 	}
 
-	if err := h.repo.Create(user); err != nil {
-		http.Error(w, "Erreur lors de la création de l'utilisateur", http.StatusInternalServerError)
+	if err := h.repo.Create(r.Context(), user); err != nil {
+		http.Error(w, "Erreur lors de la creation de l'utilisateur", http.StatusInternalServerError)
 		return
 	}
 
@@ -144,7 +137,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// UpdateUserRequest représente les données pour mettre à jour un utilisateur
+// UpdateUserRequest represents the data to update a user
 type UpdateUserRequest struct {
 	Email     string  `json:"email"`
 	Nom       string  `json:"nom"`
@@ -152,15 +145,13 @@ type UpdateUserRequest struct {
 	Telephone *string `json:"telephone,omitempty"`
 }
 
-// UpdateUser met à jour un utilisateur
-// PUT /api/users/{id}
+// UpdateUser updates a user
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		http.Error(w, "Methode non autorisee", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Extraire l'ID depuis le path
 	id := r.URL.Path[len("/api/users/"):]
 	if id == "" {
 		http.Error(w, "ID manquant", http.StatusBadRequest)
@@ -169,28 +160,26 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	var req UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Données invalides", http.StatusBadRequest)
+		http.Error(w, "Donnees invalides", http.StatusBadRequest)
 		return
 	}
 
-	// Validation basique
 	if req.Email == "" || req.Nom == "" || req.Prenom == "" {
-		http.Error(w, "Email, nom et prénom sont obligatoires", http.StatusBadRequest)
+		http.Error(w, "Email, nom et prenom sont obligatoires", http.StatusBadRequest)
 		return
 	}
 
-	// Vérifier que l'utilisateur existe
-	existingUser, err := h.repo.GetByID(id)
+	existingUser, err := h.repo.GetByID(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Erreur lors de la récupération de l'utilisateur", http.StatusInternalServerError)
+		http.Error(w, "Erreur lors de la recuperation de l'utilisateur", http.StatusInternalServerError)
 		return
 	}
 	if existingUser == nil {
-		http.Error(w, "Utilisateur non trouvé", http.StatusNotFound)
+		http.Error(w, "Utilisateur non trouve", http.StatusNotFound)
 		return
 	}
 
-	user := &models.User{
+	user := &domain.User{
 		ID:        id,
 		Email:     req.Email,
 		Nom:       req.Nom,
@@ -198,15 +187,14 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		Telephone: req.Telephone,
 	}
 
-	if err := h.repo.Update(user); err != nil {
-		http.Error(w, "Erreur lors de la mise à jour de l'utilisateur", http.StatusInternalServerError)
+	if err := h.repo.Update(r.Context(), user); err != nil {
+		http.Error(w, "Erreur lors de la mise a jour de l'utilisateur", http.StatusInternalServerError)
 		return
 	}
 
-	// Récupérer l'utilisateur mis à jour pour avoir toutes les infos
-	updatedUser, err := h.repo.GetByID(id)
+	updatedUser, err := h.repo.GetByID(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Erreur lors de la récupération de l'utilisateur mis à jour", http.StatusInternalServerError)
+		http.Error(w, "Erreur lors de la recuperation de l'utilisateur mis a jour", http.StatusInternalServerError)
 		return
 	}
 
@@ -215,22 +203,20 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// DeleteUser supprime un utilisateur
-// DELETE /api/users/{id}
+// DeleteUser deletes a user
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		http.Error(w, "Methode non autorisee", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Extraire l'ID depuis le path
 	id := r.URL.Path[len("/api/users/"):]
 	if id == "" {
 		http.Error(w, "ID manquant", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.repo.Delete(id); err != nil {
+	if err := h.repo.Delete(r.Context(), id); err != nil {
 		http.Error(w, "Erreur lors de la suppression de l'utilisateur", http.StatusInternalServerError)
 		return
 	}
