@@ -1,109 +1,121 @@
-# Backend Colocation
+# Backend Colocation - Go + PostgreSQL
 
-Projet backend avec PostgreSQL et TypeORM pour la gestion de colocation.
+Projet backend en Go avec PostgreSQL pour la gestion de colocation.
 
 ## Prérequis
 
-- Node.js (v18 ou supérieur)
-- Docker et Docker Compose
-- npm ou yarn
+- Go 1.21 ou supérieur
+- Docker
+- golang-migrate (installé via Homebrew)
 
-## Installation
+## Installation rapide
 
-### 1. Installer les dépendances
-
-```bash
-npm install
-```
-
-### 2. Démarrer PostgreSQL avec Docker
+### 1. Installer les dépendances Go
 
 ```bash
-docker compose up -d
+make deps
 ```
 
-Cette commande démarre un conteneur PostgreSQL avec les paramètres suivants:
-- Host: localhost
-- Port: 5432
-- Database: coloc_db
-- User: coloc_user
-- Password: coloc_password
+### 2. Démarrer PostgreSQL
 
-### 3. Vérifier que PostgreSQL est démarré
+PostgreSQL tourne déjà sur votre machine. Pour vérifier :
 
 ```bash
-docker compose ps
+docker ps | grep postgres
 ```
 
-Vous devriez voir le conteneur `coloc_postgres` en état "running".
-
-### 4. Exécuter les migrations
+Si vous devez le redémarrer :
 
 ```bash
-npm run migration:run
+make docker-up
 ```
 
-Cette commande va créer la table `users` dans la base de données.
+### 3. Exécuter les migrations
+
+```bash
+make migrate-up
+```
+
+Cette commande crée la table `users` dans la base de données.
+
+### 4. Lancer l'application
+
+```bash
+make run
+```
 
 ## Structure du projet
 
 ```
 back_coloc/
-├── src/
-│   ├── config/
-│   │   └── data-source.ts       # Configuration TypeORM
-│   ├── entities/
-│   │   └── User.ts              # Entité User
-│   ├── migrations/
-│   │   └── 1738592000000-CreateUserTable.ts  # Migration pour créer la table users
-│   └── index.ts                 # Point d'entrée de l'application
-├── docker-compose.yml           # Configuration Docker pour PostgreSQL
+├── cmd/
+│   └── server/
+│       └── main.go              # Point d'entrée de l'application
+├── internal/
+│   ├── models/
+│   │   └── user.go              # Modèle User
+│   └── database/
+│       └── database.go          # Connexion à la base de données
+├── migrations/
+│   ├── 000001_create_users_table.up.sql    # Migration création table
+│   └── 000001_create_users_table.down.sql  # Migration rollback
+├── docker-compose.yml           # Configuration Docker PostgreSQL
 ├── .env                         # Variables d'environnement
-├── package.json
-└── tsconfig.json
+├── Makefile                     # Commandes utiles
+└── go.mod                       # Dépendances Go
 ```
 
-## Entité User
+## Modèle User
 
-L'entité User contient les champs suivants:
-- `id` (UUID) - Identifiant unique généré automatiquement
-- `email` (string) - Email unique de l'utilisateur
-- `nom` (string) - Nom de famille
-- `prenom` (string) - Prénom
-- `telephone` (string, optionnel) - Numéro de téléphone
-- `created_at` (timestamp) - Date de création
-- `updated_at` (timestamp) - Date de dernière modification
+```go
+type User struct {
+    ID        string    // UUID généré automatiquement
+    Email     string    // Email unique
+    Nom       string    // Nom de famille
+    Prenom    string    // Prénom
+    Telephone *string   // Numéro de téléphone (optionnel)
+    CreatedAt time.Time // Date de création
+    UpdatedAt time.Time // Date de modification
+}
+```
 
-## Scripts disponibles
-
-- `npm run dev` - Démarre l'application en mode développement
-- `npm run build` - Compile le projet TypeScript
-- `npm run migration:run` - Exécute les migrations en attente
-- `npm run migration:revert` - Annule la dernière migration
-- `npm run migration:generate -- -n NomDeLaMigration` - Génère une nouvelle migration
-
-## Commandes Docker utiles
+## Commandes disponibles (Makefile)
 
 ```bash
-# Démarrer PostgreSQL
-docker compose up -d
+make help          # Affiche toutes les commandes disponibles
+make docker-up     # Démarre PostgreSQL avec Docker
+make docker-down   # Arrête PostgreSQL
+make migrate-up    # Applique les migrations
+make migrate-down  # Annule la dernière migration
+make run           # Lance l'application
+make build         # Compile l'application
+make test          # Lance les tests
+make deps          # Installe les dépendances
+```
 
-# Arrêter PostgreSQL
-docker compose down
+## Migrations
 
-# Voir les logs de PostgreSQL
-docker compose logs -f postgres
+### Créer une nouvelle migration
 
-# Se connecter à PostgreSQL
-docker compose exec postgres psql -U coloc_user -d coloc_db
+```bash
+make migrate-create NAME=nom_de_la_migration
+```
 
-# Supprimer les volumes (⚠️ supprime toutes les données)
-docker compose down -v
+### Appliquer les migrations
+
+```bash
+make migrate-up
+```
+
+### Annuler une migration
+
+```bash
+make migrate-down
 ```
 
 ## Variables d'environnement
 
-Les variables d'environnement sont stockées dans le fichier `.env`:
+Le fichier `.env` contient :
 
 ```env
 DB_HOST=localhost
@@ -113,12 +125,40 @@ DB_PASSWORD=coloc_password
 DB_NAME=coloc_db
 ```
 
-## Développement
+## Connexion à la base de données
 
-Pour développer, lancez:
+Pour vous connecter manuellement à PostgreSQL :
 
 ```bash
-npm run dev
+docker compose exec postgres psql -U coloc_user -d coloc_db
 ```
 
-Cela démarrera l'application qui se connectera à la base de données PostgreSQL.
+Ou avec psql local :
+
+```bash
+psql -h localhost -p 5432 -U coloc_user -d coloc_db
+```
+
+## Docker (sans Docker Desktop)
+
+Si Docker Desktop ne fonctionne pas, Docker CLI fonctionne quand même :
+
+```bash
+# Vérifier que Docker tourne
+docker ps
+
+# Démarrer PostgreSQL
+docker compose up -d
+
+# Voir les logs
+docker compose logs -f postgres
+
+# Arrêter
+docker compose down
+```
+
+## Développement
+
+1. Modifier le code dans `cmd/server/main.go` ou créer de nouveaux handlers
+2. Lancer avec `make run`
+3. Pour ajouter une nouvelle table, créer une migration avec `make migrate-create`
