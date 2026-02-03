@@ -1,0 +1,168 @@
+syntax = "proto3";
+
+package coloc;
+
+option go_package = "github.com/vblanchet22/back_coloc/proto/pb";
+
+import "google/api/annotations.proto";
+
+// FundService handles common fund operations
+service FundService {
+  // Create a new common fund
+  rpc CreateFund(CreateFundRequest) returns (Fund) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/funds"
+      body: "*"
+    };
+  }
+
+  // Get fund by ID
+  rpc GetFund(GetFundRequest) returns (Fund) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/funds/{id}"
+    };
+  }
+
+  // List funds for colocation
+  rpc ListFunds(ListFundsRequest) returns (ListFundsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/funds"
+    };
+  }
+
+  // Update fund
+  rpc UpdateFund(UpdateFundRequest) returns (Fund) {
+    option (google.api.http) = {
+      put: "/api/colocations/{colocation_id}/funds/{id}"
+      body: "*"
+    };
+  }
+
+  // Delete fund
+  rpc DeleteFund(DeleteFundRequest) returns (DeleteFundResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{colocation_id}/funds/{id}"
+    };
+  }
+
+  // Add contribution to fund
+  rpc AddContribution(AddContributionRequest) returns (Contribution) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/funds/{fund_id}/contributions"
+      body: "*"
+    };
+  }
+
+  // List contributions for fund
+  rpc ListContributions(ListContributionsRequest) returns (ListContributionsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/funds/{fund_id}/contributions"
+    };
+  }
+
+  // Delete contribution
+  rpc DeleteContribution(DeleteContributionRequest) returns (DeleteContributionResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{colocation_id}/funds/{fund_id}/contributions/{id}"
+    };
+  }
+}
+
+message CreateFundRequest {
+  string colocation_id = 1;
+  string name = 2;
+  optional string description = 3;
+  optional double target_amount = 4;
+}
+
+message GetFundRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message ListFundsRequest {
+  string colocation_id = 1;
+  optional bool is_active = 2;
+}
+
+message ListFundsResponse {
+  repeated Fund funds = 1;
+}
+
+message UpdateFundRequest {
+  string colocation_id = 1;
+  string id = 2;
+  optional string name = 3;
+  optional string description = 4;
+  optional double target_amount = 5;
+  optional bool is_active = 6;
+}
+
+message DeleteFundRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message DeleteFundResponse {
+  bool success = 1;
+}
+
+message AddContributionRequest {
+  string colocation_id = 1;
+  string fund_id = 2;
+  double amount = 3;
+  optional string note = 4;
+}
+
+message ListContributionsRequest {
+  string colocation_id = 1;
+  string fund_id = 2;
+}
+
+message ListContributionsResponse {
+  repeated Contribution contributions = 1;
+}
+
+message DeleteContributionRequest {
+  string colocation_id = 1;
+  string fund_id = 2;
+  string id = 3;
+}
+
+message DeleteContributionResponse {
+  bool success = 1;
+}
+
+message Fund {
+  string id = 1;
+  string colocation_id = 2;
+  string name = 3;
+  optional string description = 4;
+  optional double target_amount = 5;
+  double current_amount = 6;
+  bool is_active = 7;
+  string created_by = 8;
+  string created_by_nom = 9;
+  string created_by_prenom = 10;
+  double progress_percentage = 11;  // current_amount / target_amount * 100
+  string created_at = 12;
+  repeated ContributorSummary contributors = 13;
+}
+
+message ContributorSummary {
+  string user_id = 1;
+  string user_nom = 2;
+  string user_prenom = 3;
+  double total_contributed = 4;
+}
+
+message Contribution {
+  string id = 1;
+  string fund_id = 2;
+  string user_id = 3;
+  string user_nom = 4;
+  string user_prenom = 5;
+  double amount = 6;
+  optional string note = 7;
+  string created_at = 8;
+}

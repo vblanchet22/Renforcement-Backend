@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package coloc;
+
+option go_package = "github.com/vblanchet22/back_coloc/proto/pb";
+
+import "google/api/annotations.proto";
+
+// NotificationService handles notification operations
+service NotificationService {
+  // List notifications for current user
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse) {
+    option (google.api.http) = {
+      get: "/api/notifications"
+    };
+  }
+
+  // Mark notification as read
+  rpc MarkAsRead(MarkAsReadRequest) returns (MarkAsReadResponse) {
+    option (google.api.http) = {
+      post: "/api/notifications/{id}/read"
+      body: "*"
+    };
+  }
+
+  // Mark all notifications as read
+  rpc MarkAllAsRead(MarkAllAsReadRequest) returns (MarkAllAsReadResponse) {
+    option (google.api.http) = {
+      post: "/api/notifications/read-all"
+      body: "*"
+    };
+  }
+
+  // Delete notification
+  rpc DeleteNotification(DeleteNotificationRequest) returns (DeleteNotificationResponse) {
+    option (google.api.http) = {
+      delete: "/api/notifications/{id}"
+    };
+  }
+
+  // Get unread count
+  rpc GetUnreadCount(GetUnreadCountRequest) returns (GetUnreadCountResponse) {
+    option (google.api.http) = {
+      get: "/api/notifications/unread-count"
+    };
+  }
+
+  // Stream notifications (real-time)
+  rpc StreamNotifications(StreamNotificationsRequest) returns (stream Notification);
+}
+
+enum NotificationType {
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+
+  // Expense notifications
+  NOTIFICATION_TYPE_EXPENSE_CREATED = 1;
+  NOTIFICATION_TYPE_EXPENSE_UPDATED = 2;
+  NOTIFICATION_TYPE_EXPENSE_DELETED = 3;
+
+  // Payment notifications
+  NOTIFICATION_TYPE_PAYMENT_RECEIVED = 10;
+  NOTIFICATION_TYPE_PAYMENT_CONFIRMED = 11;
+  NOTIFICATION_TYPE_PAYMENT_REJECTED = 12;
+
+  // Colocation notifications
+  NOTIFICATION_TYPE_MEMBER_JOINED = 20;
+  NOTIFICATION_TYPE_MEMBER_LEFT = 21;
+  NOTIFICATION_TYPE_MEMBER_REMOVED = 22;
+  NOTIFICATION_TYPE_INVITATION_RECEIVED = 23;
+  NOTIFICATION_TYPE_ROLE_CHANGED = 24;
+
+  // Decision notifications
+  NOTIFICATION_TYPE_DECISION_CREATED = 30;
+  NOTIFICATION_TYPE_DECISION_CLOSED = 31;
+  NOTIFICATION_TYPE_DECISION_DEADLINE = 32;
+
+  // Fund notifications
+  NOTIFICATION_TYPE_FUND_CREATED = 40;
+  NOTIFICATION_TYPE_FUND_CONTRIBUTION = 41;
+  NOTIFICATION_TYPE_FUND_GOAL_REACHED = 42;
+
+  // Event notifications
+  NOTIFICATION_TYPE_EVENT_CREATED = 50;
+  NOTIFICATION_TYPE_EVENT_UPDATED = 51;
+  NOTIFICATION_TYPE_EVENT_REMINDER = 52;
+  NOTIFICATION_TYPE_EVENT_CANCELLED = 53;
+
+  // Recurring expense notifications
+  NOTIFICATION_TYPE_RECURRING_DUE = 60;
+}
+
+message ListNotificationsRequest {
+  optional string colocation_id = 1;
+  optional bool unread_only = 2;
+  optional int32 page = 3;
+  optional int32 page_size = 4;
+}
+
+message ListNotificationsResponse {
+  repeated Notification notifications = 1;
+  int32 total_count = 2;
+  int32 unread_count = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message MarkAsReadRequest {
+  string id = 1;
+}
+
+message MarkAsReadResponse {
+  bool success = 1;
+}
+
+message MarkAllAsReadRequest {
+  optional string colocation_id = 1;
+}
+
+message MarkAllAsReadResponse {
+  int32 marked_count = 1;
+}
+
+message DeleteNotificationRequest {
+  string id = 1;
+}
+
+message DeleteNotificationResponse {
+  bool success = 1;
+}
+
+message GetUnreadCountRequest {
+  optional string colocation_id = 1;
+}
+
+message GetUnreadCountResponse {
+  int32 count = 1;
+}
+
+message StreamNotificationsRequest {
+  // Empty - uses authenticated user
+}
+
+message Notification {
+  string id = 1;
+  string user_id = 2;
+  optional string colocation_id = 3;
+  optional string colocation_name = 4;
+  NotificationType type = 5;
+  string title = 6;
+  string body = 7;
+  map<string, string> data = 8;  // Additional data (expense_id, payment_id, etc.)
+  bool is_read = 9;
+  string created_at = 10;
+}

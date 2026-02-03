@@ -1,0 +1,261 @@
+syntax = "proto3";
+
+package coloc;
+
+option go_package = "github.com/vblanchet22/back_coloc/proto/pb";
+
+import "google/api/annotations.proto";
+
+// ColocationService handles colocation operations
+service ColocationService {
+  // Create a new colocation
+  rpc CreateColocation(CreateColocationRequest) returns (Colocation) {
+    option (google.api.http) = {
+      post: "/api/colocations"
+      body: "*"
+    };
+  }
+
+  // Get colocation by ID
+  rpc GetColocation(GetColocationRequest) returns (Colocation) {
+    option (google.api.http) = {
+      get: "/api/colocations/{id}"
+    };
+  }
+
+  // List user's colocations
+  rpc ListColocations(ListColocationsRequest) returns (ListColocationsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations"
+    };
+  }
+
+  // Update colocation (admin only)
+  rpc UpdateColocation(UpdateColocationRequest) returns (Colocation) {
+    option (google.api.http) = {
+      put: "/api/colocations/{id}"
+      body: "*"
+    };
+  }
+
+  // Delete colocation (admin only)
+  rpc DeleteColocation(DeleteColocationRequest) returns (DeleteColocationResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{id}"
+    };
+  }
+
+  // Join colocation with invite code
+  rpc JoinColocation(JoinColocationRequest) returns (Colocation) {
+    option (google.api.http) = {
+      post: "/api/colocations/join"
+      body: "*"
+    };
+  }
+
+  // Leave colocation
+  rpc LeaveColocation(LeaveColocationRequest) returns (LeaveColocationResponse) {
+    option (google.api.http) = {
+      post: "/api/colocations/{id}/leave"
+      body: "*"
+    };
+  }
+
+  // Get colocation members
+  rpc GetMembers(GetMembersRequest) returns (GetMembersResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/members"
+    };
+  }
+
+  // Remove member from colocation (admin only)
+  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{colocation_id}/members/{user_id}"
+    };
+  }
+
+  // Update member role (admin only)
+  rpc UpdateMemberRole(UpdateMemberRoleRequest) returns (ColocationMember) {
+    option (google.api.http) = {
+      put: "/api/colocations/{colocation_id}/members/{user_id}/role"
+      body: "*"
+    };
+  }
+
+  // Regenerate invite code (admin only)
+  rpc RegenerateInviteCode(RegenerateInviteCodeRequest) returns (RegenerateInviteCodeResponse) {
+    option (google.api.http) = {
+      post: "/api/colocations/{id}/regenerate-code"
+      body: "*"
+    };
+  }
+
+  // Send invitation by email
+  rpc SendInvitation(SendInvitationRequest) returns (Invitation) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/invitations"
+      body: "*"
+    };
+  }
+
+  // List pending invitations for colocation
+  rpc ListInvitations(ListInvitationsRequest) returns (ListInvitationsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/invitations"
+    };
+  }
+
+  // Cancel invitation
+  rpc CancelInvitation(CancelInvitationRequest) returns (CancelInvitationResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{colocation_id}/invitations/{invitation_id}"
+    };
+  }
+}
+
+message CreateColocationRequest {
+  string name = 1;
+  optional string description = 2;
+  optional string address = 3;
+}
+
+message GetColocationRequest {
+  string id = 1;
+}
+
+message ListColocationsRequest {}
+
+message ListColocationsResponse {
+  repeated Colocation colocations = 1;
+}
+
+message UpdateColocationRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional string address = 4;
+}
+
+message DeleteColocationRequest {
+  string id = 1;
+}
+
+message DeleteColocationResponse {
+  bool success = 1;
+}
+
+message JoinColocationRequest {
+  string invite_code = 1;
+}
+
+message LeaveColocationRequest {
+  string id = 1;
+}
+
+message LeaveColocationResponse {
+  bool success = 1;
+}
+
+message GetMembersRequest {
+  string colocation_id = 1;
+}
+
+message GetMembersResponse {
+  repeated ColocationMember members = 1;
+}
+
+message RemoveMemberRequest {
+  string colocation_id = 1;
+  string user_id = 2;
+}
+
+message RemoveMemberResponse {
+  bool success = 1;
+}
+
+message UpdateMemberRoleRequest {
+  string colocation_id = 1;
+  string user_id = 2;
+  MemberRole role = 3;
+}
+
+message RegenerateInviteCodeRequest {
+  string id = 1;
+}
+
+message RegenerateInviteCodeResponse {
+  string invite_code = 1;
+}
+
+message SendInvitationRequest {
+  string colocation_id = 1;
+  string email = 2;
+}
+
+message ListInvitationsRequest {
+  string colocation_id = 1;
+}
+
+message ListInvitationsResponse {
+  repeated Invitation invitations = 1;
+}
+
+message CancelInvitationRequest {
+  string colocation_id = 1;
+  string invitation_id = 2;
+}
+
+message CancelInvitationResponse {
+  bool success = 1;
+}
+
+enum MemberRole {
+  MEMBER_ROLE_UNSPECIFIED = 0;
+  MEMBER_ROLE_MEMBER = 1;
+  MEMBER_ROLE_ADMIN = 2;
+}
+
+enum InvitationStatus {
+  INVITATION_STATUS_UNSPECIFIED = 0;
+  INVITATION_STATUS_PENDING = 1;
+  INVITATION_STATUS_ACCEPTED = 2;
+  INVITATION_STATUS_REJECTED = 3;
+  INVITATION_STATUS_EXPIRED = 4;
+}
+
+message Colocation {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  optional string address = 4;
+  string created_by = 5;
+  string invite_code = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  MemberRole current_user_role = 9;
+  int32 member_count = 10;
+}
+
+message ColocationMember {
+  string id = 1;
+  string user_id = 2;
+  string colocation_id = 3;
+  MemberRole role = 4;
+  string joined_at = 5;
+  // User details
+  string email = 6;
+  string nom = 7;
+  string prenom = 8;
+  optional string avatar_url = 9;
+}
+
+message Invitation {
+  string id = 1;
+  string colocation_id = 2;
+  string invited_by = 3;
+  string invited_email = 4;
+  InvitationStatus status = 5;
+  string expires_at = 6;
+  string created_at = 7;
+}

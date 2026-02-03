@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package coloc;
+
+option go_package = "github.com/vblanchet22/back_coloc/proto/pb";
+
+import "google/api/annotations.proto";
+
+// CategoryService handles expense category operations
+service CategoryService {
+  // List all categories (global + colocation custom)
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/categories"
+    };
+  }
+
+  // Create custom category for colocation
+  rpc CreateCategory(CreateCategoryRequest) returns (Category) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/categories"
+      body: "*"
+    };
+  }
+
+  // Update custom category
+  rpc UpdateCategory(UpdateCategoryRequest) returns (Category) {
+    option (google.api.http) = {
+      put: "/api/colocations/{colocation_id}/categories/{id}"
+      body: "*"
+    };
+  }
+
+  // Delete custom category
+  rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{colocation_id}/categories/{id}"
+    };
+  }
+
+  // Get category statistics
+  rpc GetCategoryStats(GetCategoryStatsRequest) returns (GetCategoryStatsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/categories/stats"
+    };
+  }
+}
+
+message ListCategoriesRequest {
+  string colocation_id = 1;
+}
+
+message ListCategoriesResponse {
+  repeated Category categories = 1;
+}
+
+message CreateCategoryRequest {
+  string colocation_id = 1;
+  string name = 2;
+  optional string icon = 3;
+  optional string color = 4;
+}
+
+message UpdateCategoryRequest {
+  string colocation_id = 1;
+  string id = 2;
+  optional string name = 3;
+  optional string icon = 4;
+  optional string color = 5;
+}
+
+message DeleteCategoryRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message DeleteCategoryResponse {
+  bool success = 1;
+}
+
+message GetCategoryStatsRequest {
+  string colocation_id = 1;
+  optional string start_date = 2;  // Format: YYYY-MM-DD
+  optional string end_date = 3;    // Format: YYYY-MM-DD
+}
+
+message GetCategoryStatsResponse {
+  repeated CategoryStat stats = 1;
+  double total_amount = 2;
+}
+
+message Category {
+  string id = 1;
+  string name = 2;
+  optional string icon = 3;
+  optional string color = 4;
+  bool is_global = 5;  // true if global category, false if custom
+  optional string colocation_id = 6;
+}
+
+message CategoryStat {
+  string category_id = 1;
+  string category_name = 2;
+  optional string icon = 3;
+  optional string color = 4;
+  double total_amount = 5;
+  int32 expense_count = 6;
+  double percentage = 7;
+}

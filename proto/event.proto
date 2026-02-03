@@ -1,0 +1,183 @@
+syntax = "proto3";
+
+package coloc;
+
+option go_package = "github.com/vblanchet22/back_coloc/proto/pb";
+
+import "google/api/annotations.proto";
+
+// EventService handles event operations
+service EventService {
+  // Create a new event
+  rpc CreateEvent(CreateEventRequest) returns (Event) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/events"
+      body: "*"
+    };
+  }
+
+  // Get event by ID
+  rpc GetEvent(GetEventRequest) returns (Event) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/events/{id}"
+    };
+  }
+
+  // List events for colocation
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/events"
+    };
+  }
+
+  // Update event
+  rpc UpdateEvent(UpdateEventRequest) returns (Event) {
+    option (google.api.http) = {
+      put: "/api/colocations/{colocation_id}/events/{id}"
+      body: "*"
+    };
+  }
+
+  // Delete event
+  rpc DeleteEvent(DeleteEventRequest) returns (DeleteEventResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{colocation_id}/events/{id}"
+    };
+  }
+
+  // RSVP to event
+  rpc RSVP(RSVPRequest) returns (RSVPResponse) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/events/{event_id}/rsvp"
+      body: "*"
+    };
+  }
+
+  // Get event participants
+  rpc GetParticipants(GetParticipantsRequest) returns (GetParticipantsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/events/{event_id}/participants"
+    };
+  }
+}
+
+enum EventStatus {
+  EVENT_STATUS_UNSPECIFIED = 0;
+  EVENT_STATUS_UPCOMING = 1;
+  EVENT_STATUS_ONGOING = 2;
+  EVENT_STATUS_COMPLETED = 3;
+  EVENT_STATUS_CANCELLED = 4;
+}
+
+enum RSVPStatus {
+  RSVP_STATUS_UNSPECIFIED = 0;
+  RSVP_STATUS_GOING = 1;
+  RSVP_STATUS_MAYBE = 2;
+  RSVP_STATUS_NOT_GOING = 3;
+}
+
+message CreateEventRequest {
+  string colocation_id = 1;
+  string title = 2;
+  optional string description = 3;
+  string event_date = 4;  // Format: YYYY-MM-DD HH:MM
+  optional string location = 5;
+  optional double budget = 6;
+  optional string fund_id = 7;  // Link to common fund
+}
+
+message GetEventRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message ListEventsRequest {
+  string colocation_id = 1;
+  optional EventStatus status = 2;
+  optional string start_date = 3;
+  optional string end_date = 4;
+  optional int32 page = 5;
+  optional int32 page_size = 6;
+}
+
+message ListEventsResponse {
+  repeated Event events = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message UpdateEventRequest {
+  string colocation_id = 1;
+  string id = 2;
+  optional string title = 3;
+  optional string description = 4;
+  optional string event_date = 5;
+  optional string location = 6;
+  optional double budget = 7;
+  optional string fund_id = 8;
+  optional EventStatus status = 9;
+}
+
+message DeleteEventRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message DeleteEventResponse {
+  bool success = 1;
+}
+
+message RSVPRequest {
+  string colocation_id = 1;
+  string event_id = 2;
+  RSVPStatus status = 3;
+}
+
+message RSVPResponse {
+  bool success = 1;
+}
+
+message GetParticipantsRequest {
+  string colocation_id = 1;
+  string event_id = 2;
+}
+
+message GetParticipantsResponse {
+  repeated EventParticipant participants = 1;
+  int32 going_count = 2;
+  int32 maybe_count = 3;
+  int32 not_going_count = 4;
+}
+
+message EventParticipant {
+  string user_id = 1;
+  string user_nom = 2;
+  string user_prenom = 3;
+  optional string avatar_url = 4;
+  RSVPStatus rsvp_status = 5;
+  string responded_at = 6;
+}
+
+message Event {
+  string id = 1;
+  string colocation_id = 2;
+  string created_by = 3;
+  string created_by_nom = 4;
+  string created_by_prenom = 5;
+  string title = 6;
+  optional string description = 7;
+  string event_date = 8;
+  optional string location = 9;
+  optional double budget = 10;
+  optional string fund_id = 11;
+  optional string fund_name = 12;
+  EventStatus status = 13;
+  string created_at = 14;
+  // Current user's RSVP
+  RSVPStatus user_rsvp = 15;
+  // Participant counts
+  int32 going_count = 16;
+  int32 maybe_count = 17;
+  int32 not_going_count = 18;
+}

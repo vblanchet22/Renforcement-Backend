@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package coloc;
+
+option go_package = "github.com/vblanchet22/back_coloc/proto/pb";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+// UserService handles user operations
+service UserService {
+  // Get current user profile
+  rpc GetCurrentUser(GetCurrentUserRequest) returns (User) {
+    option (google.api.http) = {
+      get: "/api/users/me"
+    };
+  }
+
+  // Update current user profile
+  rpc UpdateCurrentUser(UpdateUserRequest) returns (User) {
+    option (google.api.http) = {
+      put: "/api/users/me"
+      body: "*"
+    };
+  }
+
+  // Delete current user account
+  rpc DeleteCurrentUser(DeleteCurrentUserRequest) returns (DeleteUserResponse) {
+    option (google.api.http) = {
+      delete: "/api/users/me"
+    };
+  }
+
+  // Get user by ID (for viewing other users in colocation)
+  rpc GetUser(GetUserRequest) returns (User) {
+    option (google.api.http) = {
+      get: "/api/users/{id}"
+    };
+  }
+}
+
+message GetCurrentUserRequest {}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message UpdateUserRequest {
+  optional string nom = 1;
+  optional string prenom = 2;
+  optional string telephone = 3;
+  optional string avatar_url = 4;
+  optional string current_password = 5;
+  optional string new_password = 6;
+}
+
+message DeleteCurrentUserRequest {}
+
+message DeleteUserResponse {
+  bool success = 1;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string nom = 3;
+  string prenom = 4;
+  optional string telephone = 5;
+  optional string avatar_url = 6;
+  bool is_active = 7;
+  string created_at = 8;  // French formatted datetime
+  string updated_at = 9;  // French formatted datetime
+}

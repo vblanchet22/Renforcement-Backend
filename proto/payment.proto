@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package coloc;
+
+option go_package = "github.com/vblanchet22/back_coloc/proto/pb";
+
+import "google/api/annotations.proto";
+
+// PaymentService handles payment operations
+service PaymentService {
+  // Create a payment (declare reimbursement)
+  rpc CreatePayment(CreatePaymentRequest) returns (Payment) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/payments"
+      body: "*"
+    };
+  }
+
+  // Get payment by ID
+  rpc GetPayment(GetPaymentRequest) returns (Payment) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/payments/{id}"
+    };
+  }
+
+  // List payments for colocation
+  rpc ListPayments(ListPaymentsRequest) returns (ListPaymentsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/payments"
+    };
+  }
+
+  // Confirm payment (by recipient)
+  rpc ConfirmPayment(ConfirmPaymentRequest) returns (Payment) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/payments/{id}/confirm"
+      body: "*"
+    };
+  }
+
+  // Reject payment (by recipient)
+  rpc RejectPayment(RejectPaymentRequest) returns (Payment) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/payments/{id}/reject"
+      body: "*"
+    };
+  }
+
+  // Cancel payment (by sender, only if pending)
+  rpc CancelPayment(CancelPaymentRequest) returns (CancelPaymentResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{colocation_id}/payments/{id}"
+    };
+  }
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_PENDING = 1;
+  PAYMENT_STATUS_CONFIRMED = 2;
+  PAYMENT_STATUS_REJECTED = 3;
+}
+
+message CreatePaymentRequest {
+  string colocation_id = 1;
+  string to_user_id = 2;
+  double amount = 3;
+  optional string note = 4;
+}
+
+message GetPaymentRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message ListPaymentsRequest {
+  string colocation_id = 1;
+  optional PaymentStatus status = 2;
+  optional string from_user_id = 3;
+  optional string to_user_id = 4;
+  optional int32 page = 5;
+  optional int32 page_size = 6;
+}
+
+message ListPaymentsResponse {
+  repeated Payment payments = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message ConfirmPaymentRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message RejectPaymentRequest {
+  string colocation_id = 1;
+  string id = 2;
+  optional string reason = 3;
+}
+
+message CancelPaymentRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message CancelPaymentResponse {
+  bool success = 1;
+}
+
+message Payment {
+  string id = 1;
+  string colocation_id = 2;
+  string from_user_id = 3;
+  string from_user_nom = 4;
+  string from_user_prenom = 5;
+  optional string from_avatar_url = 6;
+  string to_user_id = 7;
+  string to_user_nom = 8;
+  string to_user_prenom = 9;
+  optional string to_avatar_url = 10;
+  double amount = 11;
+  PaymentStatus status = 12;
+  optional string note = 13;
+  optional string confirmed_at = 14;
+  string created_at = 15;
+}

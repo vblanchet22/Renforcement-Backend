@@ -1,0 +1,192 @@
+syntax = "proto3";
+
+package coloc;
+
+option go_package = "github.com/vblanchet22/back_coloc/proto/pb";
+
+import "google/api/annotations.proto";
+
+// DecisionService handles collective decision operations
+service DecisionService {
+  // Create a new decision/poll
+  rpc CreateDecision(CreateDecisionRequest) returns (Decision) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/decisions"
+      body: "*"
+    };
+  }
+
+  // Get decision by ID
+  rpc GetDecision(GetDecisionRequest) returns (Decision) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/decisions/{id}"
+    };
+  }
+
+  // List decisions for colocation
+  rpc ListDecisions(ListDecisionsRequest) returns (ListDecisionsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/decisions"
+    };
+  }
+
+  // Update decision (only if no votes yet)
+  rpc UpdateDecision(UpdateDecisionRequest) returns (Decision) {
+    option (google.api.http) = {
+      put: "/api/colocations/{colocation_id}/decisions/{id}"
+      body: "*"
+    };
+  }
+
+  // Delete decision
+  rpc DeleteDecision(DeleteDecisionRequest) returns (DeleteDecisionResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{colocation_id}/decisions/{id}"
+    };
+  }
+
+  // Vote on a decision
+  rpc Vote(VoteRequest) returns (VoteResponse) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/decisions/{decision_id}/vote"
+      body: "*"
+    };
+  }
+
+  // Close decision (stop accepting votes)
+  rpc CloseDecision(CloseDecisionRequest) returns (Decision) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/decisions/{id}/close"
+      body: "*"
+    };
+  }
+
+  // Get decision results
+  rpc GetResults(GetResultsRequest) returns (GetResultsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/decisions/{id}/results"
+    };
+  }
+}
+
+enum DecisionStatus {
+  DECISION_STATUS_UNSPECIFIED = 0;
+  DECISION_STATUS_OPEN = 1;
+  DECISION_STATUS_CLOSED = 2;
+}
+
+message DecisionOption {
+  int32 index = 1;
+  string text = 2;
+}
+
+message CreateDecisionRequest {
+  string colocation_id = 1;
+  string title = 2;
+  optional string description = 3;
+  repeated string options = 4;  // List of option texts
+  optional string deadline = 5;  // Format: YYYY-MM-DD HH:MM
+  bool allow_multiple = 6;       // Allow multiple votes per user
+  bool is_anonymous = 7;         // Hide who voted for what
+}
+
+message GetDecisionRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message ListDecisionsRequest {
+  string colocation_id = 1;
+  optional DecisionStatus status = 2;
+  optional int32 page = 3;
+  optional int32 page_size = 4;
+}
+
+message ListDecisionsResponse {
+  repeated Decision decisions = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message UpdateDecisionRequest {
+  string colocation_id = 1;
+  string id = 2;
+  optional string title = 3;
+  optional string description = 4;
+  repeated string options = 5;
+  optional string deadline = 6;
+  optional bool allow_multiple = 7;
+  optional bool is_anonymous = 8;
+}
+
+message DeleteDecisionRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message DeleteDecisionResponse {
+  bool success = 1;
+}
+
+message VoteRequest {
+  string colocation_id = 1;
+  string decision_id = 2;
+  repeated int32 option_indices = 3;  // Can vote for multiple if allow_multiple
+}
+
+message VoteResponse {
+  bool success = 1;
+}
+
+message CloseDecisionRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message GetResultsRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message GetResultsResponse {
+  string decision_id = 1;
+  DecisionStatus status = 2;
+  repeated OptionResult results = 3;
+  int32 total_votes = 4;
+  int32 total_voters = 5;
+  optional int32 winning_option_index = 6;
+}
+
+message OptionResult {
+  int32 option_index = 1;
+  string option_text = 2;
+  int32 vote_count = 3;
+  double percentage = 4;
+  repeated Voter voters = 5;  // Empty if is_anonymous
+}
+
+message Voter {
+  string user_id = 1;
+  string user_nom = 2;
+  string user_prenom = 3;
+}
+
+message Decision {
+  string id = 1;
+  string colocation_id = 2;
+  string created_by = 3;
+  string created_by_nom = 4;
+  string created_by_prenom = 5;
+  string title = 6;
+  optional string description = 7;
+  repeated DecisionOption options = 8;
+  DecisionStatus status = 9;
+  optional string deadline = 10;
+  bool allow_multiple = 11;
+  bool is_anonymous = 12;
+  int32 vote_count = 13;
+  bool has_voted = 14;  // Whether current user has voted
+  repeated int32 user_votes = 15;  // Current user's votes (option indices)
+  string created_at = 16;
+}

@@ -1,0 +1,283 @@
+syntax = "proto3";
+
+package coloc;
+
+option go_package = "github.com/vblanchet22/back_coloc/proto/pb";
+
+import "google/api/annotations.proto";
+
+// ExpenseService handles expense operations
+service ExpenseService {
+  // Create a new expense
+  rpc CreateExpense(CreateExpenseRequest) returns (Expense) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/expenses"
+      body: "*"
+    };
+  }
+
+  // Get expense by ID
+  rpc GetExpense(GetExpenseRequest) returns (Expense) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/expenses/{id}"
+    };
+  }
+
+  // List expenses for colocation
+  rpc ListExpenses(ListExpensesRequest) returns (ListExpensesResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/expenses"
+    };
+  }
+
+  // Update expense
+  rpc UpdateExpense(UpdateExpenseRequest) returns (Expense) {
+    option (google.api.http) = {
+      put: "/api/colocations/{colocation_id}/expenses/{id}"
+      body: "*"
+    };
+  }
+
+  // Delete expense
+  rpc DeleteExpense(DeleteExpenseRequest) returns (DeleteExpenseResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{colocation_id}/expenses/{id}"
+    };
+  }
+
+  // Create recurring expense template
+  rpc CreateRecurringExpense(CreateRecurringExpenseRequest) returns (RecurringExpense) {
+    option (google.api.http) = {
+      post: "/api/colocations/{colocation_id}/recurring-expenses"
+      body: "*"
+    };
+  }
+
+  // List recurring expenses
+  rpc ListRecurringExpenses(ListRecurringExpensesRequest) returns (ListRecurringExpensesResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/recurring-expenses"
+    };
+  }
+
+  // Update recurring expense
+  rpc UpdateRecurringExpense(UpdateRecurringExpenseRequest) returns (RecurringExpense) {
+    option (google.api.http) = {
+      put: "/api/colocations/{colocation_id}/recurring-expenses/{id}"
+      body: "*"
+    };
+  }
+
+  // Delete recurring expense
+  rpc DeleteRecurringExpense(DeleteRecurringExpenseRequest) returns (DeleteRecurringExpenseResponse) {
+    option (google.api.http) = {
+      delete: "/api/colocations/{colocation_id}/recurring-expenses/{id}"
+    };
+  }
+
+  // Get expense forecast
+  rpc GetForecast(GetForecastRequest) returns (GetForecastResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/expenses/forecast"
+    };
+  }
+}
+
+enum SplitType {
+  SPLIT_TYPE_UNSPECIFIED = 0;
+  SPLIT_TYPE_EQUAL = 1;       // Equal split among all members
+  SPLIT_TYPE_PERCENTAGE = 2;  // Custom percentage per member
+  SPLIT_TYPE_CUSTOM = 3;      // Fixed amount per member
+}
+
+enum Recurrence {
+  RECURRENCE_UNSPECIFIED = 0;
+  RECURRENCE_DAILY = 1;
+  RECURRENCE_WEEKLY = 2;
+  RECURRENCE_MONTHLY = 3;
+  RECURRENCE_YEARLY = 4;
+}
+
+message ExpenseSplit {
+  string user_id = 1;
+  double amount = 2;       // Amount owed by this user
+  double percentage = 3;   // Percentage (for SPLIT_TYPE_PERCENTAGE)
+  bool is_settled = 4;     // Whether this split has been settled
+  // User details
+  string user_nom = 5;
+  string user_prenom = 6;
+}
+
+message CreateExpenseRequest {
+  string colocation_id = 1;
+  string title = 2;
+  optional string description = 3;
+  double amount = 4;
+  string category_id = 5;
+  SplitType split_type = 6;
+  repeated ExpenseSplitInput splits = 7;  // Required for percentage/custom
+  string expense_date = 8;  // Format: YYYY-MM-DD
+}
+
+message ExpenseSplitInput {
+  string user_id = 1;
+  double amount = 2;      // For SPLIT_TYPE_CUSTOM
+  double percentage = 3;  // For SPLIT_TYPE_PERCENTAGE
+}
+
+message GetExpenseRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message ListExpensesRequest {
+  string colocation_id = 1;
+  optional string category_id = 2;
+  optional string paid_by = 3;
+  optional string start_date = 4;
+  optional string end_date = 5;
+  optional int32 page = 6;
+  optional int32 page_size = 7;
+}
+
+message ListExpensesResponse {
+  repeated Expense expenses = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message UpdateExpenseRequest {
+  string colocation_id = 1;
+  string id = 2;
+  optional string title = 3;
+  optional string description = 4;
+  optional double amount = 5;
+  optional string category_id = 6;
+  optional SplitType split_type = 7;
+  repeated ExpenseSplitInput splits = 8;
+  optional string expense_date = 9;
+}
+
+message DeleteExpenseRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message DeleteExpenseResponse {
+  bool success = 1;
+}
+
+message Expense {
+  string id = 1;
+  string colocation_id = 2;
+  string paid_by = 3;
+  string paid_by_nom = 4;
+  string paid_by_prenom = 5;
+  string category_id = 6;
+  string category_name = 7;
+  string title = 8;
+  optional string description = 9;
+  double amount = 10;
+  SplitType split_type = 11;
+  string expense_date = 12;
+  optional string recurring_id = 13;
+  string created_at = 14;
+  repeated ExpenseSplit splits = 15;
+}
+
+// Recurring expenses
+
+message CreateRecurringExpenseRequest {
+  string colocation_id = 1;
+  string title = 2;
+  optional string description = 3;
+  double amount = 4;
+  string category_id = 5;
+  SplitType split_type = 6;
+  repeated ExpenseSplitInput splits = 7;
+  Recurrence recurrence = 8;
+  string start_date = 9;
+  optional string end_date = 10;
+}
+
+message ListRecurringExpensesRequest {
+  string colocation_id = 1;
+}
+
+message ListRecurringExpensesResponse {
+  repeated RecurringExpense recurring_expenses = 1;
+}
+
+message UpdateRecurringExpenseRequest {
+  string colocation_id = 1;
+  string id = 2;
+  optional string title = 3;
+  optional string description = 4;
+  optional double amount = 5;
+  optional string category_id = 6;
+  optional SplitType split_type = 7;
+  repeated ExpenseSplitInput splits = 8;
+  optional Recurrence recurrence = 9;
+  optional string end_date = 10;
+  optional bool is_active = 11;
+}
+
+message DeleteRecurringExpenseRequest {
+  string colocation_id = 1;
+  string id = 2;
+}
+
+message DeleteRecurringExpenseResponse {
+  bool success = 1;
+}
+
+message RecurringExpense {
+  string id = 1;
+  string colocation_id = 2;
+  string paid_by = 3;
+  string paid_by_nom = 4;
+  string paid_by_prenom = 5;
+  string category_id = 6;
+  string category_name = 7;
+  string title = 8;
+  optional string description = 9;
+  double amount = 10;
+  SplitType split_type = 11;
+  Recurrence recurrence = 12;
+  string next_due_date = 13;
+  optional string end_date = 14;
+  bool is_active = 15;
+  string created_at = 16;
+  repeated RecurringExpenseSplit splits = 17;
+}
+
+message RecurringExpenseSplit {
+  string user_id = 1;
+  double percentage = 2;
+  string user_nom = 3;
+  string user_prenom = 4;
+}
+
+// Forecast
+
+message GetForecastRequest {
+  string colocation_id = 1;
+  int32 months_ahead = 2;  // Number of months to forecast (default 3)
+}
+
+message GetForecastResponse {
+  repeated MonthlyForecast forecasts = 1;
+}
+
+message MonthlyForecast {
+  string month = 1;  // Format: YYYY-MM
+  double total_amount = 2;
+  repeated CategoryForecast categories = 3;
+}
+
+message CategoryForecast {
+  string category_id = 1;
+  string category_name = 2;
+  double amount = 3;
+}

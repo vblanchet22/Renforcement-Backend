@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package coloc;
+
+option go_package = "github.com/vblanchet22/back_coloc/proto/pb";
+
+import "google/api/annotations.proto";
+
+// BalanceService handles balance and debt operations
+service BalanceService {
+  // Get all balances for colocation
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/balances"
+    };
+  }
+
+  // Get simplified debts (min-cash-flow algorithm)
+  rpc GetSimplifiedDebts(GetSimplifiedDebtsRequest) returns (GetSimplifiedDebtsResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/balances/simplified"
+    };
+  }
+
+  // Get balance history for a user
+  rpc GetBalanceHistory(GetBalanceHistoryRequest) returns (GetBalanceHistoryResponse) {
+    option (google.api.http) = {
+      get: "/api/colocations/{colocation_id}/balances/history"
+    };
+  }
+}
+
+message GetBalancesRequest {
+  string colocation_id = 1;
+}
+
+message GetBalancesResponse {
+  repeated UserBalance balances = 1;
+  repeated Debt debts = 2;
+}
+
+message UserBalance {
+  string user_id = 1;
+  string user_nom = 2;
+  string user_prenom = 3;
+  optional string avatar_url = 4;
+  double total_paid = 5;      // Total amount paid by user
+  double total_owed = 6;      // Total amount user owes
+  double net_balance = 7;     // Positive = others owe them, Negative = they owe others
+}
+
+message Debt {
+  string from_user_id = 1;
+  string from_user_nom = 2;
+  string from_user_prenom = 3;
+  string to_user_id = 4;
+  string to_user_nom = 5;
+  string to_user_prenom = 6;
+  double amount = 7;
+}
+
+message GetSimplifiedDebtsRequest {
+  string colocation_id = 1;
+}
+
+message GetSimplifiedDebtsResponse {
+  repeated SimplifiedDebt debts = 1;
+}
+
+message SimplifiedDebt {
+  string from_user_id = 1;
+  string from_user_nom = 2;
+  string from_user_prenom = 3;
+  optional string from_avatar_url = 4;
+  string to_user_id = 5;
+  string to_user_nom = 6;
+  string to_user_prenom = 7;
+  optional string to_avatar_url = 8;
+  double amount = 9;
+}
+
+message GetBalanceHistoryRequest {
+  string colocation_id = 1;
+  optional string start_date = 2;
+  optional string end_date = 3;
+}
+
+message GetBalanceHistoryResponse {
+  repeated BalanceHistoryEntry entries = 1;
+}
+
+message BalanceHistoryEntry {
+  string date = 1;
+  double cumulative_balance = 2;
+  string event_type = 3;  // "expense" or "payment"
+  string event_id = 4;
+  string description = 5;
+  double amount = 6;
+}
