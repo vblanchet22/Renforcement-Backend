@@ -110,12 +110,6 @@ func toAuthResponse(result *service.AuthResult) *pb.AuthResponse {
 
 // DomainUserToProto converts a domain User to protobuf User
 func DomainUserToProto(user *domain.User) *pb.User {
-	// Extract creation timestamp from ULID
-	createdAt := ""
-	if createdTime, err := utils.ULIDToTime(user.ID); err == nil {
-		createdAt = utils.FormatFrenchDateTime(createdTime)
-	}
-
 	return &pb.User{
 		Id:        user.ID,
 		Email:     user.Email,
@@ -124,7 +118,7 @@ func DomainUserToProto(user *domain.User) *pb.User {
 		Telephone: user.Telephone,
 		AvatarUrl: user.AvatarURL,
 		IsActive:  user.IsActive,
-		CreatedAt: createdAt,
+		CreatedAt: utils.FormatFrenchDateTime(user.CreatedAt),
 		UpdatedAt: utils.FormatFrenchDateTime(user.UpdatedAt),
 	}
 }

@@ -22,9 +22,9 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 // GetAll retrieves all users
 func (r *UserRepository) GetAll(ctx context.Context) ([]domain.User, error) {
 	query := `
-		SELECT id, email, nom, prenom, telephone, updated_at
+		SELECT id, email, nom, prenom, telephone, created_at, updated_at
 		FROM users
-		ORDER BY id DESC
+		ORDER BY created_at DESC
 	`
 
 	rows, err := r.pool.Query(ctx, query)
@@ -42,6 +42,7 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]domain.User, error) {
 			&user.Nom,
 			&user.Prenom,
 			&user.Telephone,
+			&user.CreatedAt,
 			&user.UpdatedAt,
 		)
 		if err != nil {
@@ -60,7 +61,7 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]domain.User, error) {
 // GetByID retrieves a user by ID
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*domain.User, error) {
 	query := `
-		SELECT id, email, nom, prenom, telephone, updated_at
+		SELECT id, email, nom, prenom, telephone, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -72,6 +73,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*domain.User, 
 		&user.Nom,
 		&user.Prenom,
 		&user.Telephone,
+		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
 
@@ -90,7 +92,7 @@ func (r *UserRepository) Create(ctx context.Context, user *domain.User) error {
 	query := `
 		INSERT INTO users (email, nom, prenom, telephone)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, updated_at
+		RETURNING id, created_at, updated_at
 	`
 
 	err := r.pool.QueryRow(
@@ -100,7 +102,7 @@ func (r *UserRepository) Create(ctx context.Context, user *domain.User) error {
 		user.Nom,
 		user.Prenom,
 		user.Telephone,
-	).Scan(&user.ID, &user.UpdatedAt)
+	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
 		return fmt.Errorf("erreur lors de la creation de l'utilisateur: %w", err)

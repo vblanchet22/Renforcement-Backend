@@ -25,7 +25,7 @@ func (r *AuthRepository) CreateUser(ctx context.Context, user *domain.User) erro
 	query := `
 		INSERT INTO users (email, password_hash, nom, prenom, telephone, avatar_url, is_active)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, updated_at
+		RETURNING id, created_at, updated_at
 	`
 
 	err := r.pool.QueryRow(
@@ -38,7 +38,7 @@ func (r *AuthRepository) CreateUser(ctx context.Context, user *domain.User) erro
 		user.Telephone,
 		user.AvatarURL,
 		user.IsActive,
-	).Scan(&user.ID, &user.UpdatedAt)
+	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
 		return fmt.Errorf("erreur lors de la creation de l'utilisateur: %w", err)
@@ -50,7 +50,7 @@ func (r *AuthRepository) CreateUser(ctx context.Context, user *domain.User) erro
 // GetUserByEmail retrieves a user by email
 func (r *AuthRepository) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
 	query := `
-		SELECT id, email, password_hash, nom, prenom, telephone, avatar_url, is_active, updated_at
+		SELECT id, email, password_hash, nom, prenom, telephone, avatar_url, is_active, created_at, updated_at
 		FROM users
 		WHERE email = $1 AND is_active = true
 	`
@@ -65,6 +65,7 @@ func (r *AuthRepository) GetUserByEmail(ctx context.Context, email string) (*dom
 		&user.Telephone,
 		&user.AvatarURL,
 		&user.IsActive,
+		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
 
@@ -81,7 +82,7 @@ func (r *AuthRepository) GetUserByEmail(ctx context.Context, email string) (*dom
 // GetUserByID retrieves a user by ID
 func (r *AuthRepository) GetUserByID(ctx context.Context, id string) (*domain.User, error) {
 	query := `
-		SELECT id, email, password_hash, nom, prenom, telephone, avatar_url, is_active, updated_at
+		SELECT id, email, password_hash, nom, prenom, telephone, avatar_url, is_active, created_at, updated_at
 		FROM users
 		WHERE id = $1 AND is_active = true
 	`
@@ -96,6 +97,7 @@ func (r *AuthRepository) GetUserByID(ctx context.Context, id string) (*domain.Us
 		&user.Telephone,
 		&user.AvatarURL,
 		&user.IsActive,
+		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
 
