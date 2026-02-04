@@ -31,13 +31,19 @@ type UserResponse struct {
 }
 
 func toUserResponse(user *domain.User) UserResponse {
+	// Extraire le timestamp depuis l'ULID (démontre la fonctionnalité des ULIDs)
+	createdAt := ""
+	if createdTime, err := utils.ULIDToTime(user.ID); err == nil {
+		createdAt = utils.FormatFrenchDateTime(createdTime)
+	}
+
 	return UserResponse{
 		ID:        user.ID,
 		Email:     user.Email,
 		Nom:       user.Nom,
 		Prenom:    user.Prenom,
 		Telephone: user.Telephone,
-		CreatedAt: utils.FormatFrenchDateTime(user.CreatedAt),
+		CreatedAt: createdAt, // Extrait depuis l'ULID
 		UpdatedAt: utils.FormatFrenchDateTime(user.UpdatedAt),
 	}
 }
