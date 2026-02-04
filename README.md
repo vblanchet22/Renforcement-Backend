@@ -93,6 +93,20 @@ make test          # Lance les tests
 make deps          # Installe les dépendances
 ```
 
+## Données de démonstration
+
+Vous pouvez remplir rapidement la dernière colocation créée (ou une colocation précise) avec des membres, catégories et dépenses de test :
+
+```bash
+# utilise la dernière colocation créée
+go run cmd/seed/main.go
+
+# cible une colocation précise (ID visible dans la base/API)
+go run cmd/seed/main.go --colocation-id=<ID_DE_LA_COLOCATION>
+```
+
+Le script lit la configuration `DB_*`, ajoute des membres démo si besoin puis crée des dépenses `[DEMO]` cohérentes. Il nettoie d'abord les anciennes dépenses marquées `[DEMO]` pour éviter les doublons.
+
 ## Migrations
 
 ### Créer une nouvelle migration

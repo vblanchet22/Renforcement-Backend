@@ -7,7 +7,6 @@ import {
   Receipt,
   Calendar,
   ChevronDown,
-  MoreHorizontal,
   Trash2,
   Edit2,
 } from 'lucide-react';
@@ -25,7 +24,6 @@ export function Expenses() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showNewExpenseModal, setShowNewExpenseModal] = useState(false);
 
-  // New expense form
   const [newExpense, setNewExpense] = useState({
     title: '',
     amount: '',
@@ -38,14 +36,12 @@ export function Expenses() {
   useEffect(() => {
     const fetchData = async () => {
       if (!currentColocation) return;
-
       setIsLoading(true);
       try {
         const [expensesRes, categoriesRes] = await Promise.all([
           expenseApi.list({ colocation_id: currentColocation.id }),
           categoryApi.list(currentColocation.id),
         ]);
-
         setExpenses(expensesRes.expenses);
         setCategories(categoriesRes);
       } catch (error) {
@@ -54,7 +50,6 @@ export function Expenses() {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [currentColocation]);
 
@@ -67,7 +62,6 @@ export function Expenses() {
   const handleCreateExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentColocation) return;
-
     try {
       const expense = await expenseApi.create({
         colocation_id: currentColocation.id,
@@ -78,17 +72,9 @@ export function Expenses() {
         expense_date: newExpense.expense_date,
         description: newExpense.description || undefined,
       });
-
       setExpenses([expense, ...expenses]);
       setShowNewExpenseModal(false);
-      setNewExpense({
-        title: '',
-        amount: '',
-        category_id: '',
-        split_type: 'equal',
-        expense_date: new Date().toISOString().split('T')[0],
-        description: '',
-      });
+      setNewExpense({ title: '', amount: '', category_id: '', split_type: 'equal', expense_date: new Date().toISOString().split('T')[0], description: '' });
     } catch (error) {
       console.error('Error creating expense:', error);
     }
@@ -96,73 +82,45 @@ export function Expenses() {
 
   const getSplitTypeLabel = (type: SplitType) => {
     switch (type) {
-      case 'equal':
-        return 'Égal';
-      case 'percentage':
-        return 'Pourcentage';
-      case 'custom':
-        return 'Personnalisé';
+      case 'equal': return 'Égal';
+      case 'percentage': return 'Pourcentage';
+      case 'custom': return 'Personnalisé';
     }
   };
 
   const totalAmount = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-display text-3xl text-[var(--color-text)]">Dépenses</h1>
-          <p className="text-[var(--color-text-secondary)]">
-            Gérez les dépenses de votre colocation
-          </p>
+          <h1 className="text-3xl font-semibold text-slate-800">Dépenses</h1>
+          <p className="text-slate-500 text-lg mt-1">Gérez les dépenses de votre colocation</p>
         </div>
-        <Button leftIcon={<Plus className="w-4 h-4" />} onClick={() => setShowNewExpenseModal(true)}>
+        <Button size="lg" leftIcon={<Plus className="w-5 h-5" />} onClick={() => setShowNewExpenseModal(true)}>
           Nouvelle dépense
         </Button>
       </div>
 
       {/* Filters */}
-      <Card padding="sm">
+      <Card className="p-5">
         <div className="flex items-center gap-4">
           <div className="flex-1">
-            <Input
-              placeholder="Rechercher une dépense..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={<Search className="w-5 h-5" />}
-            />
+            <Input placeholder="Rechercher une dépense..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} leftIcon={<Search className="w-5 h-5" />} />
           </div>
-
           <div className="relative group">
             <Button variant="secondary" leftIcon={<Filter className="w-4 h-4" />}>
-              Catégorie
-              <ChevronDown className="w-4 h-4 ml-1" />
+              Catégorie <ChevronDown className="w-4 h-4 ml-2" />
             </Button>
-            <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)] shadow-[var(--shadow-lg)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <button
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-surface-hover)] ${
-                  !selectedCategory ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'
-                }`}
-                onClick={() => setSelectedCategory(null)}
-              >
+            <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-2">
+              <button className={`w-full text-left px-4 py-3 text-sm hover:bg-slate-50 ${!selectedCategory ? 'text-primary font-medium' : 'text-slate-700'}`} onClick={() => setSelectedCategory(null)}>
                 Toutes les catégories
               </button>
               {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-surface-hover)] ${
-                    selectedCategory === cat.id
-                      ? 'text-[var(--color-primary)]'
-                      : 'text-[var(--color-text)]'
-                  }`}
-                  onClick={() => setSelectedCategory(cat.id)}
-                >
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: cat.color }}
-                    />
+                <button key={cat.id} className={`w-full text-left px-4 py-3 text-sm hover:bg-slate-50 ${selectedCategory === cat.id ? 'text-primary font-medium' : 'text-slate-700'}`} onClick={() => setSelectedCategory(cat.id)}>
+                  <span className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
                     {cat.name}
                   </span>
                 </button>
@@ -173,34 +131,28 @@ export function Expenses() {
       </Card>
 
       {/* Stats bar */}
-      <div className="flex items-center justify-between p-4 rounded-[var(--radius-md)] bg-[var(--color-primary-light)]">
-        <div className="flex items-center gap-6">
-          <div>
-            <p className="text-sm text-[var(--color-primary)]">Total</p>
-            <p className="text-2xl font-semibold text-[var(--color-primary)]">
-              {totalAmount.toFixed(2)} €
-            </p>
-          </div>
-          <div className="w-px h-10 bg-[var(--color-primary)]/20" />
-          <div>
-            <p className="text-sm text-[var(--color-primary)]">Nombre de dépenses</p>
-            <p className="text-2xl font-semibold text-[var(--color-primary)]">
-              {filteredExpenses.length}
-            </p>
-          </div>
+      <div className="flex items-center gap-10 px-6 py-5 rounded-2xl bg-primary/5 border border-primary/10">
+        <div>
+          <p className="text-sm text-primary font-medium mb-1">Total</p>
+          <p className="text-3xl font-semibold text-primary">{totalAmount.toFixed(2)} €</p>
+        </div>
+        <div className="w-px h-12 bg-primary/20" />
+        <div>
+          <p className="text-sm text-primary font-medium mb-1">Nombre de dépenses</p>
+          <p className="text-3xl font-semibold text-primary">{filteredExpenses.length}</p>
         </div>
       </div>
 
       {/* Expenses List */}
-      <Card padding="none">
-        <div className="divide-y divide-[var(--color-border-light)]">
+      <Card className="p-0 overflow-hidden">
+        <div className="divide-y divide-slate-100">
           <AnimatePresence>
             {filteredExpenses.length === 0 ? (
-              <div className="p-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-[var(--color-surface-hover)] flex items-center justify-center mx-auto mb-4">
-                  <Receipt className="w-8 h-8 text-[var(--color-text-muted)]" />
+              <div className="p-16 text-center">
+                <div className="w-20 h-20 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-6">
+                  <Receipt className="w-10 h-10 text-slate-300" />
                 </div>
-                <p className="text-[var(--color-text-secondary)]">Aucune dépense trouvée</p>
+                <p className="text-slate-400 text-lg">Aucune dépense trouvée</p>
               </div>
             ) : (
               filteredExpenses.map((expense, index) => (
@@ -209,70 +161,40 @@ export function Expenses() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-4 p-4 hover:bg-[var(--color-surface-hover)] transition-colors"
+                  transition={{ delay: index * 0.03 }}
+                  className="flex items-center gap-5 px-6 py-5 hover:bg-slate-50/50 transition-colors"
                 >
-                  {/* Category icon */}
-                  <div
-                    className="w-12 h-12 rounded-[var(--radius-sm)] flex items-center justify-center flex-shrink-0"
-                    style={{
-                      backgroundColor: expense.category?.color
-                        ? `${expense.category.color}15`
-                        : 'var(--color-surface-hover)',
-                    }}
-                  >
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: expense.category?.color ? `${expense.category.color}12` : '#f1f5f9' }}>
                     <span className="text-xl">{expense.category?.icon || '💰'}</span>
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-[var(--color-text)] truncate">
-                        {expense.title}
-                      </p>
-                      <Badge variant="default" size="sm">
-                        {getSplitTypeLabel(expense.split_type)}
-                      </Badge>
+                    <div className="flex items-center gap-3">
+                      <p className="font-medium text-slate-800 truncate text-base">{expense.title}</p>
+                      <Badge variant="default" size="sm">{getSplitTypeLabel(expense.split_type)}</Badge>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-[var(--color-text-muted)]">
-                      <span className="flex items-center gap-1">
-                        <Avatar
-                          name={
-                            expense.payer
-                              ? `${expense.payer.prenom} ${expense.payer.nom}`
-                              : 'Utilisateur'
-                          }
-                          size="sm"
-                          className="w-5 h-5"
-                        />
+                    <div className="flex items-center gap-4 mt-1.5 text-sm text-slate-400">
+                      <span className="flex items-center gap-2">
+                        <Avatar name={expense.payer ? `${expense.payer.prenom} ${expense.payer.nom}` : 'Utilisateur'} size="sm" className="w-5 h-5 text-[9px]" />
                         {expense.payer?.prenom || 'Inconnu'}
                       </span>
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1.5">
                         <Calendar className="w-4 h-4" />
                         {new Date(expense.expense_date).toLocaleDateString('fr-FR')}
                       </span>
                     </div>
                   </div>
-
-                  {/* Amount */}
                   <div className="text-right">
-                    <p className="text-lg font-semibold text-[var(--color-text)]">
-                      {expense.amount.toFixed(2)} €
-                    </p>
+                    <p className="text-lg font-semibold text-slate-800">{expense.amount.toFixed(2)} €</p>
                     {expense.splits && expense.splits.length > 0 && (
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        {(expense.amount / expense.splits.length).toFixed(2)} €/pers
-                      </p>
+                      <p className="text-sm text-slate-400 mt-0.5">{(expense.amount / expense.splits.length).toFixed(2)} €/pers</p>
                     )}
                   </div>
-
-                  {/* Actions */}
                   <div className="flex items-center gap-1">
-                    <button className="p-2 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      <Edit2 className="w-4 h-4" />
+                    <button className="p-3 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+                      <Edit2 className="w-5 h-5" />
                     </button>
-                    <button className="p-2 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-light)] transition-colors">
-                      <Trash2 className="w-4 h-4" />
+                    <button className="p-3 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 </motion.div>
@@ -283,96 +205,36 @@ export function Expenses() {
       </Card>
 
       {/* New Expense Modal */}
-      <Modal
-        isOpen={showNewExpenseModal}
-        onClose={() => setShowNewExpenseModal(false)}
-        title="Nouvelle dépense"
-        size="lg"
-      >
-        <form onSubmit={handleCreateExpense} className="space-y-4">
-          <Input
-            label="Titre"
-            placeholder="Ex: Courses Carrefour"
-            value={newExpense.title}
-            onChange={(e) => setNewExpense({ ...newExpense, title: e.target.value })}
-            required
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Montant (€)"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              value={newExpense.amount}
-              onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
-              required
-            />
-
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">
-                Catégorie
-              </label>
-              <select
-                className="w-full px-4 py-2.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-light)] focus:border-[var(--color-primary)]"
-                value={newExpense.category_id}
-                onChange={(e) => setNewExpense({ ...newExpense, category_id: e.target.value })}
-                required
-              >
+      <Modal isOpen={showNewExpenseModal} onClose={() => setShowNewExpenseModal(false)} title="Nouvelle dépense" size="lg">
+        <form onSubmit={handleCreateExpense} className="space-y-5">
+          <Input label="Titre" placeholder="Ex: Courses Carrefour" value={newExpense.title} onChange={(e) => setNewExpense({ ...newExpense, title: e.target.value })} required />
+          <div className="grid grid-cols-2 gap-5">
+            <Input label="Montant (€)" type="number" step="0.01" placeholder="0.00" value={newExpense.amount} onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })} required />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">Catégorie</label>
+              <select className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" value={newExpense.category_id} onChange={(e) => setNewExpense({ ...newExpense, category_id: e.target.value })} required>
                 <option value="">Sélectionner...</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.icon} {cat.name}
-                  </option>
-                ))}
+                {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>))}
               </select>
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Date"
-              type="date"
-              value={newExpense.expense_date}
-              onChange={(e) => setNewExpense({ ...newExpense, expense_date: e.target.value })}
-              required
-            />
-
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">
-                Mode de partage
-              </label>
-              <select
-                className="w-full px-4 py-2.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-light)] focus:border-[var(--color-primary)]"
-                value={newExpense.split_type}
-                onChange={(e) =>
-                  setNewExpense({ ...newExpense, split_type: e.target.value as SplitType })
-                }
-              >
+          <div className="grid grid-cols-2 gap-5">
+            <Input label="Date" type="date" value={newExpense.expense_date} onChange={(e) => setNewExpense({ ...newExpense, expense_date: e.target.value })} required />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">Mode de partage</label>
+              <select className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" value={newExpense.split_type} onChange={(e) => setNewExpense({ ...newExpense, split_type: e.target.value as SplitType })}>
                 <option value="equal">Égal entre tous</option>
                 <option value="percentage">Par pourcentage</option>
                 <option value="custom">Montants personnalisés</option>
               </select>
             </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text)] mb-1.5">
-              Description (optionnel)
-            </label>
-            <textarea
-              className="w-full px-4 py-2.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-light)] focus:border-[var(--color-primary)] resize-none"
-              rows={3}
-              placeholder="Ajouter une description..."
-              value={newExpense.description}
-              onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
-            />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">Description (optionnel)</label>
+            <textarea className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none" rows={3} placeholder="Ajouter une description..." value={newExpense.description} onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })} />
           </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="secondary" onClick={() => setShowNewExpenseModal(false)}>
-              Annuler
-            </Button>
+          <div className="flex justify-end gap-4 pt-4">
+            <Button type="button" variant="secondary" onClick={() => setShowNewExpenseModal(false)}>Annuler</Button>
             <Button type="submit">Créer la dépense</Button>
           </div>
         </form>

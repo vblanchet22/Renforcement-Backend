@@ -1,4 +1,4 @@
-import api from './client';
+﻿import api from './client';
 import type { Expense, RecurringExpense, SplitType, Recurrence, MonthlyForecast } from '../types';
 
 interface SplitInput {

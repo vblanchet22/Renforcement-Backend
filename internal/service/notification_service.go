@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/vblanchet22/back_coloc/internal/auth"
+	"github.com/vblanchet22/back_coloc/internal/constants"
 	"github.com/vblanchet22/back_coloc/internal/domain"
 	"github.com/vblanchet22/back_coloc/internal/repository/postgres"
 )
@@ -34,12 +35,7 @@ func (s *NotificationService) List(ctx context.Context, colocationID *string, un
 		return nil, 0, 0, err
 	}
 
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 20
-	}
+	page, pageSize = normalizePagination(page, pageSize)
 
 	return s.repo.ListByUser(ctx, userID, colocationID, unreadOnly, page, pageSize)
 }
@@ -86,7 +82,7 @@ func (s *NotificationService) GetUnreadCount(ctx context.Context, colocationID *
 
 // Subscribe adds a subscriber for real-time notifications
 func (s *NotificationService) Subscribe(userID string) chan *domain.Notification {
-	ch := make(chan *domain.Notification, 100)
+	ch := make(chan *domain.Notification, constants.NotificationChannelBuffer)
 
 	s.mu.Lock()
 	s.subscribers[userID] = append(s.subscribers[userID], ch)
@@ -116,14 +112,19 @@ func (s *NotificationService) Unsubscribe(userID string, ch chan *domain.Notific
 
 // Notify sends a notification to a specific user (and persists it)
 func (s *NotificationService) Notify(ctx context.Context, notif *domain.Notification) error {
-	// Persist
 	if err := s.repo.Create(ctx, notif); err != nil {
 		return fmt.Errorf("erreur lors de la creation de la notification: %w", err)
 	}
 
-	// Broadcast to subscribers
+	s.broadcastToUser(notif.UserID, notif)
+
+	return nil
+}
+
+// broadcastToUser sends a notification to all channels subscribed by a user
+func (s *NotificationService) broadcastToUser(userID string, notif *domain.Notification) {
 	s.mu.RLock()
-	channels := s.subscribers[notif.UserID]
+	channels := s.subscribers[userID]
 	s.mu.RUnlock()
 
 	for _, ch := range channels {
@@ -133,8 +134,6 @@ func (s *NotificationService) Notify(ctx context.Context, notif *domain.Notifica
 			// Channel full, skip
 		}
 	}
-
-	return nil
 }
 
 // NotifyColocationMembers sends a notification to all members of a colocation

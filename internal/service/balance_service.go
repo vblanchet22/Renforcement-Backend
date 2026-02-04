@@ -27,18 +27,8 @@ func NewBalanceService(repo *postgres.BalanceRepository, colocationRepo *postgre
 
 // GetBalances returns all balances and raw debts for a colocation
 func (s *BalanceService) GetBalances(ctx context.Context, colocationID string) ([]domain.UserBalance, []domain.Debt, error) {
-	userID, err := auth.GetUserIDFromContext(ctx)
-	if err != nil {
+	if _, err := s.ensureColocationMember(ctx, colocationID); err != nil {
 		return nil, nil, err
-	}
-
-	// Check membership
-	isMember, err := s.colocationRepo.IsMember(ctx, colocationID, userID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("erreur lors de la verification: %w", err)
-	}
-	if !isMember {
-		return nil, nil, fmt.Errorf("vous n'etes pas membre de cette colocation")
 	}
 
 	balances, err := s.repo.GetUserBalances(ctx, colocationID)
@@ -56,18 +46,8 @@ func (s *BalanceService) GetBalances(ctx context.Context, colocationID string) (
 
 // GetSimplifiedDebts returns simplified debts using the min-cash-flow algorithm
 func (s *BalanceService) GetSimplifiedDebts(ctx context.Context, colocationID string) ([]domain.SimplifiedDebt, error) {
-	userID, err := auth.GetUserIDFromContext(ctx)
-	if err != nil {
+	if _, err := s.ensureColocationMember(ctx, colocationID); err != nil {
 		return nil, err
-	}
-
-	// Check membership
-	isMember, err := s.colocationRepo.IsMember(ctx, colocationID, userID)
-	if err != nil {
-		return nil, fmt.Errorf("erreur lors de la verification: %w", err)
-	}
-	if !isMember {
-		return nil, fmt.Errorf("vous n'etes pas membre de cette colocation")
 	}
 
 	// Get member info and balances
@@ -126,19 +106,27 @@ func (s *BalanceService) GetSimplifiedDebts(ctx context.Context, colocationID st
 
 // GetBalanceHistory returns balance history for the current user
 func (s *BalanceService) GetBalanceHistory(ctx context.Context, colocationID string, startDate, endDate *time.Time) ([]domain.BalanceHistoryEntry, error) {
-	userID, err := auth.GetUserIDFromContext(ctx)
+	userID, err := s.ensureColocationMember(ctx, colocationID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check membership
-	isMember, err := s.colocationRepo.IsMember(ctx, colocationID, userID)
+	return s.repo.GetBalanceHistory(ctx, colocationID, userID, startDate, endDate)
+}
+
+func (s *BalanceService) ensureColocationMember(ctx context.Context, colocationID string) (string, error) {
+	userID, err := auth.GetUserIDFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("erreur lors de la verification: %w", err)
-	}
-	if !isMember {
-		return nil, fmt.Errorf("vous n'etes pas membre de cette colocation")
+		return "", err
 	}
 
-	return s.repo.GetBalanceHistory(ctx, colocationID, userID, startDate, endDate)
+	isMember, err := s.colocationRepo.IsMember(ctx, colocationID, userID)
+	if err != nil {
+		return "", fmt.Errorf("erreur lors de la verification: %w", err)
+	}
+	if !isMember {
+		return "", fmt.Errorf("vous n'etes pas membre de cette colocation")
+	}
+
+	return userID, nil
 }

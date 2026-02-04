@@ -29,26 +29,21 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] flex">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary)] via-blue-500 to-[var(--color-accent)]" />
-
-        {/* Decorative shapes */}
+    <div className="min-h-screen bg-slate-50 grid lg:grid-cols-2">
+      {/* Left — Branding */}
+      <div className="hidden lg:flex relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-blue-500 to-accent" />
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-20 -left-20 w-96 h-96 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-[var(--color-accent)]/30 blur-3xl" />
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 rounded-full bg-white/5" />
+          <div className="absolute -top-24 -left-24 w-[500px] h-[500px] rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-accent/30 blur-3xl" />
         </div>
 
-        {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 text-white">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-[var(--radius-md)] bg-white/20 backdrop-blur flex items-center justify-center">
-              <Home className="w-6 h-6" />
+            <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Home className="w-5 h-5" />
             </div>
-            <span className="text-display text-2xl">ColocApp</span>
+            <span className="font-display text-2xl">ColocApp</span>
           </div>
 
           <div className="space-y-6">
@@ -56,7 +51,7 @@ export function Login() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-display text-5xl leading-tight"
+              className="font-display text-5xl leading-[1.1]"
             >
               Simplifiez la gestion
               <br />
@@ -68,41 +63,38 @@ export function Login() {
               transition={{ delay: 0.3 }}
               className="text-lg text-white/80 max-w-md"
             >
-              Partagez les dépenses, suivez les soldes et prenez des décisions ensemble en toute simplicité.
+              Partagez les dépenses, suivez les soldes et prenez des décisions ensemble.
             </motion.p>
           </div>
 
-          <div className="flex items-center gap-6 text-sm text-white/60">
+          <div className="flex items-center gap-6 text-sm text-white/50">
             <span>Dépenses partagées</span>
-            <span className="w-1 h-1 rounded-full bg-white/40" />
+            <span className="w-1 h-1 rounded-full bg-white/30" />
             <span>Soldes en temps réel</span>
-            <span className="w-1 h-1 rounded-full bg-white/40" />
+            <span className="w-1 h-1 rounded-full bg-white/30" />
             <span>Décisions collectives</span>
           </div>
         </div>
       </div>
 
-      {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      {/* Right — Form */}
+      <div className="flex items-center justify-center bg-white px-6 py-12 sm:px-12">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md mx-auto"
         >
-          {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-[var(--radius-sm)] bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <Home className="w-5 h-5 text-white" />
             </div>
-            <span className="text-display text-xl text-[var(--color-text)]">ColocApp</span>
+            <span className="font-display text-xl text-slate-900">ColocApp</span>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-display text-3xl text-[var(--color-text)] mb-2">Bon retour !</h2>
-            <p className="text-[var(--color-text-secondary)]">
-              Connectez-vous pour accéder à votre colocation
-            </p>
+            <h2 className="font-display text-3xl text-slate-900 mb-2">Bon retour !</h2>
+            <p className="text-slate-500">Connectez-vous pour accéder à votre colocation</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -110,7 +102,7 @@ export function Login() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-[var(--radius-sm)] bg-[var(--color-danger-light)] text-[var(--color-danger)] text-sm"
+                className="p-3 rounded-xl bg-red-50 text-red-600 text-sm"
               >
                 {error}
               </motion.div>
@@ -138,13 +130,10 @@ export function Login() {
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                />
-                <span className="text-[var(--color-text-secondary)]">Se souvenir de moi</span>
+                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" />
+                <span className="text-slate-500">Se souvenir de moi</span>
               </label>
-              <a href="#" className="text-[var(--color-primary)] hover:underline">
+              <a href="#" className="text-primary hover:underline font-medium">
                 Mot de passe oublié ?
               </a>
             </div>
@@ -155,9 +144,9 @@ export function Login() {
             </Button>
           </form>
 
-          <p className="mt-8 text-center text-[var(--color-text-secondary)]">
+          <p className="mt-8 text-center text-slate-500">
             Pas encore de compte ?{' '}
-            <Link to="/register" className="text-[var(--color-primary)] font-medium hover:underline">
+            <Link to="/register" className="text-primary font-medium hover:underline">
               Créer un compte
             </Link>
           </p>

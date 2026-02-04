@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { AuthResponse, ApiError } from '../types';
 
@@ -12,14 +12,34 @@ export const api = axios.create({
 });
 
 // Token management
-let accessToken: string | null = localStorage.getItem('access_token');
-let refreshToken: string | null = localStorage.getItem('refresh_token');
+const sanitizeToken = (value: string | null) =>
+  value && value !== 'undefined' && value !== 'null' ? value : null;
 
-export const setTokens = (access: string, refresh: string) => {
-  accessToken = access;
-  refreshToken = refresh;
-  localStorage.setItem('access_token', access);
-  localStorage.setItem('refresh_token', refresh);
+let accessToken: string | null = sanitizeToken(localStorage.getItem('access_token'));
+let refreshToken: string | null = sanitizeToken(localStorage.getItem('refresh_token'));
+
+if (!accessToken && localStorage.getItem('access_token')) {
+  localStorage.removeItem('access_token');
+}
+if (!refreshToken && localStorage.getItem('refresh_token')) {
+  localStorage.removeItem('refresh_token');
+}
+
+export const setTokens = (access?: string | null, refresh?: string | null) => {
+  accessToken = sanitizeToken(access ?? null);
+  refreshToken = sanitizeToken(refresh ?? null);
+
+  if (accessToken) {
+    localStorage.setItem('access_token', accessToken);
+  } else {
+    localStorage.removeItem('access_token');
+  }
+
+  if (refreshToken) {
+    localStorage.setItem('refresh_token', refreshToken);
+  } else {
+    localStorage.removeItem('refresh_token');
+  }
 };
 
 export const clearTokens = () => {

@@ -2,6 +2,11 @@ package algorithm
 
 import "math"
 
+const (
+	debtSettlementThreshold = 0.01
+	roundingPrecisionFactor = 100
+)
+
 // DebtEdge represents a simplified debt from one person to another
 type DebtEdge struct {
 	FromIndex int
@@ -34,7 +39,7 @@ func minCashFlowRecursive(balances []float64, result *[]DebtEdge) {
 	maxDebitIdx := findMinIndex(balances)
 
 	// If both are effectively zero, we're done
-	if math.Abs(balances[maxCreditIdx]) < 0.01 && math.Abs(balances[maxDebitIdx]) < 0.01 {
+	if math.Abs(balances[maxCreditIdx]) < debtSettlementThreshold && math.Abs(balances[maxDebitIdx]) < debtSettlementThreshold {
 		return
 	}
 
@@ -43,9 +48,9 @@ func minCashFlowRecursive(balances []float64, result *[]DebtEdge) {
 	minAmount := math.Min(-balances[maxDebitIdx], balances[maxCreditIdx])
 
 	// Round to 2 decimal places
-	minAmount = math.Round(minAmount*100) / 100
+	minAmount = math.Round(minAmount*roundingPrecisionFactor) / roundingPrecisionFactor
 
-	if minAmount < 0.01 {
+	if minAmount < debtSettlementThreshold {
 		return
 	}
 

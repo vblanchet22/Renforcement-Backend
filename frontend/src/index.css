@@ -2,63 +2,19 @@
 
 @import "tailwindcss";
 
-/* Define CSS custom properties at root level for use with var() */
-:root {
-  --color-primary: #5682F2;
-  --color-primary-hover: #4571E0;
-  --color-primary-light: #EEF2FF;
-  --color-accent: #F1C086;
-  --color-accent-hover: #E5AE6A;
-  --color-bg: #F8FAFC;
-  --color-surface: #FFFFFF;
-  --color-surface-hover: #F1F5F9;
-  --color-border: #E2E8F0;
-  --color-border-light: #F1F5F9;
-  --color-text: #1E293B;
-  --color-text-secondary: #64748B;
-  --color-text-muted: #94A3B8;
-  --color-success: #10B981;
-  --color-success-light: #D1FAE5;
-  --color-warning: #F59E0B;
-  --color-warning-light: #FEF3C7;
-  --color-danger: #EF4444;
-  --color-danger-light: #FEE2E2;
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
-  --font-display: 'Instrument Serif', Georgia, serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
-}
-
-/* Tailwind v4 theme extension */
 @theme {
   --color-primary: #5682F2;
-  --color-primary-hover: #4571E0;
+  --color-primary-dark: #4A6FD9;
   --color-primary-light: #EEF2FF;
   --color-accent: #F1C086;
-  --color-accent-hover: #E5AE6A;
-  --color-bg: #F8FAFC;
-  --color-surface: #FFFFFF;
-  --color-surface-hover: #F1F5F9;
-  --color-border: #E2E8F0;
-  --color-border-light: #F1F5F9;
-  --color-text: #1E293B;
-  --color-text-secondary: #64748B;
-  --color-text-muted: #94A3B8;
-  --color-success: #10B981;
-  --color-success-light: #D1FAE5;
-  --color-warning: #F59E0B;
-  --color-warning-light: #FEF3C7;
-  --color-danger: #EF4444;
-  --color-danger-light: #FEE2E2;
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  --color-accent-dark: #E5AE6A;
+  --color-accent-light: #FDF4EB;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
 }
 
-/* Base styles */
+/* ── Base ─────────────────────────────────────────── */
+
 * {
   margin: 0;
   padding: 0;
@@ -73,8 +29,8 @@ html {
 
 body {
   font-family: 'DM Sans', system-ui, sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: #F8FAFC;
+  color: #1E293B;
   line-height: 1.6;
   min-height: 100vh;
 }
@@ -83,26 +39,22 @@ body {
   min-height: 100vh;
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
+/* ── Typography ───────────────────────────────────── */
+
+.font-display {
   font-family: 'Instrument Serif', Georgia, serif;
   font-weight: 400;
-  line-height: 1.2;
-  color: var(--color-text);
 }
 
-/* Links */
+/* ── Links ────────────────────────────────────────── */
+
 a {
-  color: var(--color-primary);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color 0.15s ease;
 }
 
-a:hover {
-  color: var(--color-primary-hover);
-}
+/* ── Form resets ──────────────────────────────────── */
 
-/* Buttons reset */
 button {
   font-family: 'DM Sans', system-ui, sans-serif;
   cursor: pointer;
@@ -110,15 +62,15 @@ button {
   outline: none;
 }
 
-/* Form inputs reset */
 input, select, textarea {
   font-family: 'DM Sans', system-ui, sans-serif;
 }
 
-/* Scrollbar */
+/* ── Scrollbar ────────────────────────────────────── */
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -126,39 +78,39 @@ input, select, textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
+  background: #CBD5E1;
+  border-radius: 100px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background: #94A3B8;
 }
 
-/* Custom utility classes */
-.text-display {
-  font-family: 'Instrument Serif', Georgia, serif;
+/* ── Animations ───────────────────────────────────── */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.text-body {
-  font-family: 'DM Sans', system-ui, sans-serif;
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-/* Animation keyframes */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
 }
 
-.animate-fade-in { animation: fadeIn 0.3s ease-out; }
-.animate-slide-up { animation: slideUp 0.4s ease-out; }
+.animate-slide-in {
+  animation: slide-in-left 0.3s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out both;
+}

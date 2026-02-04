@@ -1,4 +1,5 @@
-import { ReactNode, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
@@ -11,34 +12,18 @@ interface ModalProps {
   showCloseButton?: boolean;
 }
 
-export function Modal({
-  isOpen,
-  onClose,
-  title,
-  children,
-  size = 'md',
-  showCloseButton = true,
-}: ModalProps) {
-  const sizes = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-  };
+const sizeClasses = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-xl' };
 
+export function Modal({ isOpen, onClose, title, children, size = 'md', showCloseButton = true }: ModalProps) {
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', onKey);
       document.body.style.overflow = 'hidden';
     }
-
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
     };
   }, [isOpen, onClose]);
 
@@ -46,57 +31,32 @@ export function Modal({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            transition={{ duration: 0.15 }}
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             onClick={onClose}
           />
-
-          {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className={`
-              relative w-full ${sizes[size]}
-              bg-[var(--color-surface)]
-              rounded-[var(--radius-lg)]
-              shadow-[var(--shadow-xl)]
-              max-h-[90vh] overflow-hidden
-              flex flex-col
-            `}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className={`relative w-full ${sizeClasses[size]} bg-white rounded-2xl shadow-xl max-h-[85vh] flex flex-col overflow-hidden`}
           >
-            {/* Header */}
             {(title || showCloseButton) && (
-              <div className="flex items-center justify-between p-6 pb-0">
-                {title && (
-                  <h2 className="text-xl font-semibold text-[var(--color-text)]">{title}</h2>
-                )}
+              <div className="flex items-center justify-between px-6 pt-6 pb-2">
+                {title && <h2 className="font-display text-xl text-slate-900">{title}</h2>}
                 {showCloseButton && (
-                  <button
-                    onClick={onClose}
-                    className="
-                      p-2 -mr-2
-                      rounded-[var(--radius-sm)]
-                      text-[var(--color-text-muted)]
-                      hover:text-[var(--color-text)]
-                      hover:bg-[var(--color-surface-hover)]
-                      transition-colors
-                    "
-                  >
-                    <X className="w-5 h-5" />
+                  <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
+                    <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
             )}
-
-            {/* Content */}
-            <div className="p-6 overflow-y-auto">{children}</div>
+            <div className="px-6 pb-6 pt-2 overflow-y-auto">{children}</div>
           </motion.div>
         </div>
       )}

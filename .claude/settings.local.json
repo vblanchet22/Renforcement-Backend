@@ -38,7 +38,9 @@
       "Bash(npm create:*)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "Bash(docker ps:*)"
+      "Bash(docker ps:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite build)"
     ]
   }
 }

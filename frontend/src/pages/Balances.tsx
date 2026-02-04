@@ -24,14 +24,12 @@ export function Balances() {
   useEffect(() => {
     const fetchData = async () => {
       if (!currentColocation) return;
-
       setIsLoading(true);
       try {
         const [balancesRes, debtsRes] = await Promise.all([
           balanceApi.getBalances(currentColocation.id),
           balanceApi.getSimplifiedDebts(currentColocation.id),
         ]);
-
         setBalances(balancesRes);
         setDebts(debtsRes);
       } catch (error) {
@@ -40,7 +38,6 @@ export function Balances() {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [currentColocation]);
 
@@ -49,84 +46,42 @@ export function Balances() {
   const userBalance = balances.find((b) => b.user_id === user?.id);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-display text-3xl text-[var(--color-text)]">Soldes</h1>
-          <p className="text-[var(--color-text-secondary)]">
-            Vue d'ensemble des soldes de la colocation
-          </p>
+          <h1 className="text-3xl font-semibold text-slate-800">Soldes</h1>
+          <p className="text-slate-500 text-lg mt-1">Vue d'ensemble des soldes de la colocation</p>
         </div>
-        <Button variant="secondary" leftIcon={<RefreshCcw className="w-4 h-4" />}>
-          Actualiser
-        </Button>
+        <Button size="lg" variant="secondary" leftIcon={<RefreshCcw className="w-5 h-5" />}>Actualiser</Button>
       </div>
 
       {/* Your Balance Card */}
       {userBalance && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card
-            className={`
-              relative overflow-hidden
-              ${userBalance.net_balance >= 0 ? 'bg-gradient-to-br from-emerald-50 to-teal-50' : 'bg-gradient-to-br from-red-50 to-orange-50'}
-            `}
-          >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className={`p-8 relative overflow-hidden ${userBalance.net_balance >= 0 ? 'bg-gradient-to-br from-emerald-50 to-teal-50' : 'bg-gradient-to-br from-red-50 to-orange-50'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[var(--color-text-secondary)] mb-1">Votre solde</p>
-                <p
-                  className={`text-4xl font-semibold ${
-                    userBalance.net_balance >= 0
-                      ? 'text-[var(--color-success)]'
-                      : 'text-[var(--color-danger)]'
-                  }`}
-                >
-                  {userBalance.net_balance >= 0 ? '+' : ''}
-                  {userBalance.net_balance.toFixed(2)} €
+                <p className="text-sm text-slate-500 mb-2">Votre solde</p>
+                <p className={`text-5xl font-semibold ${userBalance.net_balance >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {userBalance.net_balance >= 0 ? '+' : ''}{userBalance.net_balance.toFixed(2)} €
                 </p>
-                <p className="text-sm text-[var(--color-text-muted)] mt-2">
-                  {userBalance.net_balance >= 0
-                    ? 'On vous doit de l\'argent'
-                    : 'Vous devez de l\'argent'}
+                <p className="text-base text-slate-400 mt-3">
+                  {userBalance.net_balance >= 0 ? "On vous doit de l'argent" : "Vous devez de l'argent"}
                 </p>
               </div>
-              <div
-                className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                  userBalance.net_balance >= 0
-                    ? 'bg-[var(--color-success)]/10'
-                    : 'bg-[var(--color-danger)]/10'
-                }`}
-              >
-                {userBalance.net_balance >= 0 ? (
-                  <TrendingUp
-                    className={`w-8 h-8 ${
-                      userBalance.net_balance >= 0
-                        ? 'text-[var(--color-success)]'
-                        : 'text-[var(--color-danger)]'
-                    }`}
-                  />
-                ) : (
-                  <TrendingDown className="w-8 h-8 text-[var(--color-danger)]" />
-                )}
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${userBalance.net_balance >= 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
+                {userBalance.net_balance >= 0 ? <TrendingUp className="w-10 h-10 text-emerald-600" /> : <TrendingDown className="w-10 h-10 text-red-500" />}
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-6 mt-6 pt-6 border-t border-black/5">
+            <div className="grid grid-cols-2 gap-8 mt-8 pt-8 border-t border-black/5">
               <div>
-                <p className="text-sm text-[var(--color-text-muted)]">Total payé</p>
-                <p className="text-xl font-semibold text-[var(--color-text)]">
-                  {userBalance.total_paid.toFixed(2)} €
-                </p>
+                <p className="text-sm text-slate-400 mb-1">Total payé</p>
+                <p className="text-2xl font-semibold text-slate-800">{userBalance.total_paid.toFixed(2)} €</p>
               </div>
               <div>
-                <p className="text-sm text-[var(--color-text-muted)]">Total dû</p>
-                <p className="text-xl font-semibold text-[var(--color-text)]">
-                  {userBalance.total_owed.toFixed(2)} €
-                </p>
+                <p className="text-sm text-slate-400 mb-1">Total dû</p>
+                <p className="text-2xl font-semibold text-slate-800">{userBalance.total_owed.toFixed(2)} €</p>
               </div>
             </div>
           </Card>
@@ -134,29 +89,19 @@ export function Balances() {
       )}
 
       {/* Simplified Debts */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <Card>
-          <CardHeader
-            title="Remboursements optimisés"
-            subtitle="Algorithme de simplification des dettes"
-          />
-
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <Card className="p-6">
+          <CardHeader title="Remboursements optimisés" subtitle="Algorithme de simplification des dettes" />
           {debts.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-full bg-[var(--color-success-light)] flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="w-8 h-8 text-[var(--color-success)]" />
+            <div className="text-center py-16 mt-4">
+              <div className="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-6">
+                <TrendingUp className="w-10 h-10 text-emerald-500" />
               </div>
-              <p className="text-lg font-medium text-[var(--color-text)]">Tout est équilibré !</p>
-              <p className="text-[var(--color-text-muted)] mt-1">
-                Aucun remboursement nécessaire pour le moment
-              </p>
+              <p className="text-xl font-medium text-slate-800">Tout est équilibré !</p>
+              <p className="text-slate-400 mt-2 text-base">Aucun remboursement nécessaire</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 mt-6">
               {debts.map((debt, index) => {
                 const isUserDebtor = debt.from_user_id === user?.id;
                 const isUserCreditor = debt.to_user_id === user?.id;
@@ -166,63 +111,31 @@ export function Balances() {
                     key={index}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`
-                      flex items-center gap-4 p-4 rounded-[var(--radius-md)]
-                      ${isUserDebtor ? 'bg-[var(--color-danger-light)]/50' : ''}
-                      ${isUserCreditor ? 'bg-[var(--color-success-light)]/50' : ''}
-                      ${!isUserDebtor && !isUserCreditor ? 'bg-[var(--color-bg)]' : ''}
-                    `}
+                    transition={{ delay: index * 0.08 }}
+                    className={`flex items-center gap-5 p-5 rounded-xl ${
+                      isUserDebtor ? 'bg-red-50/60' : isUserCreditor ? 'bg-emerald-50/60' : 'bg-slate-50'
+                    }`}
                   >
-                    <Avatar
-                      name={
-                        debt.from_user
-                          ? `${debt.from_user.prenom} ${debt.from_user.nom}`
-                          : 'Utilisateur'
-                      }
-                      size="md"
-                    />
-
+                    <Avatar name={debt.from_user ? `${debt.from_user.prenom} ${debt.from_user.nom}` : 'Utilisateur'} size="md" />
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-[var(--color-text)]">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="font-medium text-slate-800">
                           {debt.from_user?.prenom || 'Utilisateur'}
-                          {isUserDebtor && (
-                            <Badge variant="danger" size="sm" className="ml-2">
-                              Vous
-                            </Badge>
-                          )}
+                          {isUserDebtor && <Badge variant="danger" size="sm" className="ml-2">Vous</Badge>}
                         </span>
-                        <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)]" />
-                        <span className="font-medium text-[var(--color-text)]">
+                        <ArrowRight className="w-5 h-5 text-slate-400" />
+                        <span className="font-medium text-slate-800">
                           {debt.to_user?.prenom || 'Utilisateur'}
-                          {isUserCreditor && (
-                            <Badge variant="success" size="sm" className="ml-2">
-                              Vous
-                            </Badge>
-                          )}
+                          {isUserCreditor && <Badge variant="success" size="sm" className="ml-2">Vous</Badge>}
                         </span>
                       </div>
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        {isUserDebtor
-                          ? 'Vous devez rembourser'
-                          : isUserCreditor
-                            ? 'Vous allez recevoir'
-                            : 'Transaction entre colocataires'}
+                      <p className="text-sm text-slate-400 mt-1">
+                        {isUserDebtor ? 'Vous devez rembourser' : isUserCreditor ? 'Vous allez recevoir' : 'Transaction entre colocataires'}
                       </p>
                     </div>
-
-                    <div className="text-right">
-                      <p className="text-xl font-semibold text-[var(--color-text)]">
-                        {debt.amount.toFixed(2)} €
-                      </p>
-                    </div>
-
+                    <p className="text-xl font-semibold text-slate-800">{debt.amount.toFixed(2)} €</p>
                     {isUserDebtor && (
-                      <Button size="sm">
-                        Rembourser
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
+                      <Button>Rembourser <ChevronRight className="w-4 h-4 ml-1" /></Button>
                     )}
                   </motion.div>
                 );
@@ -233,62 +146,30 @@ export function Balances() {
       </motion.div>
 
       {/* All Balances */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Creditors */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader
-              title="Créanciers"
-              subtitle="Membres avec un solde positif"
-              action={
-                <div className="flex items-center gap-1 text-[var(--color-success)]">
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    {positiveBalances.reduce((sum, b) => sum + b.net_balance, 0).toFixed(2)} €
-                  </span>
-                </div>
-              }
-            />
-
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Card className="p-6">
+            <CardHeader title="Créanciers" subtitle="Membres avec un solde positif" action={
+              <div className="flex items-center gap-2 text-emerald-600">
+                <TrendingUp className="w-5 h-5" />
+                <span className="text-base font-semibold">{positiveBalances.reduce((sum, b) => sum + b.net_balance, 0).toFixed(2)} €</span>
+              </div>
+            } />
             {positiveBalances.length === 0 ? (
-              <p className="text-[var(--color-text-muted)] text-center py-6">
-                Aucun créancier
-              </p>
+              <p className="text-slate-400 text-center py-10 text-base">Aucun créancier</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 mt-6">
                 {positiveBalances.map((balance) => (
-                  <div
-                    key={balance.user_id}
-                    className="flex items-center gap-3 p-3 rounded-[var(--radius-sm)] bg-[var(--color-bg)]"
-                  >
-                    <Avatar
-                      name={
-                        balance.user
-                          ? `${balance.user.prenom} ${balance.user.nom}`
-                          : 'Utilisateur'
-                      }
-                      size="md"
-                    />
+                  <div key={balance.user_id} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50">
+                    <Avatar name={balance.user ? `${balance.user.prenom} ${balance.user.nom}` : 'Utilisateur'} size="md" />
                     <div className="flex-1">
-                      <p className="font-medium text-[var(--color-text)]">
+                      <p className="font-medium text-slate-800">
                         {balance.user?.prenom} {balance.user?.nom}
-                        {balance.user_id === user?.id && (
-                          <Badge variant="primary" size="sm" className="ml-2">
-                            Vous
-                          </Badge>
-                        )}
+                        {balance.user_id === user?.id && <Badge variant="primary" size="sm" className="ml-2">Vous</Badge>}
                       </p>
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        A payé {balance.total_paid.toFixed(2)} €
-                      </p>
+                      <p className="text-sm text-slate-400 mt-0.5">A payé {balance.total_paid.toFixed(2)} €</p>
                     </div>
-                    <p className="text-lg font-semibold text-[var(--color-success)]">
-                      +{balance.net_balance.toFixed(2)} €
-                    </p>
+                    <p className="text-lg font-semibold text-emerald-600">+{balance.net_balance.toFixed(2)} €</p>
                   </div>
                 ))}
               </div>
@@ -296,61 +177,29 @@ export function Balances() {
           </Card>
         </motion.div>
 
-        {/* Debtors */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card>
-            <CardHeader
-              title="Débiteurs"
-              subtitle="Membres avec un solde négatif"
-              action={
-                <div className="flex items-center gap-1 text-[var(--color-danger)]">
-                  <TrendingDown className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    {negativeBalances.reduce((sum, b) => sum + b.net_balance, 0).toFixed(2)} €
-                  </span>
-                </div>
-              }
-            />
-
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <Card className="p-6">
+            <CardHeader title="Débiteurs" subtitle="Membres avec un solde négatif" action={
+              <div className="flex items-center gap-2 text-red-500">
+                <TrendingDown className="w-5 h-5" />
+                <span className="text-base font-semibold">{negativeBalances.reduce((sum, b) => sum + b.net_balance, 0).toFixed(2)} €</span>
+              </div>
+            } />
             {negativeBalances.length === 0 ? (
-              <p className="text-[var(--color-text-muted)] text-center py-6">
-                Aucun débiteur
-              </p>
+              <p className="text-slate-400 text-center py-10 text-base">Aucun débiteur</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 mt-6">
                 {negativeBalances.map((balance) => (
-                  <div
-                    key={balance.user_id}
-                    className="flex items-center gap-3 p-3 rounded-[var(--radius-sm)] bg-[var(--color-bg)]"
-                  >
-                    <Avatar
-                      name={
-                        balance.user
-                          ? `${balance.user.prenom} ${balance.user.nom}`
-                          : 'Utilisateur'
-                      }
-                      size="md"
-                    />
+                  <div key={balance.user_id} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50">
+                    <Avatar name={balance.user ? `${balance.user.prenom} ${balance.user.nom}` : 'Utilisateur'} size="md" />
                     <div className="flex-1">
-                      <p className="font-medium text-[var(--color-text)]">
+                      <p className="font-medium text-slate-800">
                         {balance.user?.prenom} {balance.user?.nom}
-                        {balance.user_id === user?.id && (
-                          <Badge variant="primary" size="sm" className="ml-2">
-                            Vous
-                          </Badge>
-                        )}
+                        {balance.user_id === user?.id && <Badge variant="primary" size="sm" className="ml-2">Vous</Badge>}
                       </p>
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        Doit {balance.total_owed.toFixed(2)} €
-                      </p>
+                      <p className="text-sm text-slate-400 mt-0.5">Doit {balance.total_owed.toFixed(2)} €</p>
                     </div>
-                    <p className="text-lg font-semibold text-[var(--color-danger)]">
-                      {balance.net_balance.toFixed(2)} €
-                    </p>
+                    <p className="text-lg font-semibold text-red-500">{balance.net_balance.toFixed(2)} €</p>
                   </div>
                 ))}
               </div>

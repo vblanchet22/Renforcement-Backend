@@ -13,3 +13,9 @@ plugins:
     opt:
       - paths=source_relative
       - generate_unbound_methods=true
+  - plugin: buf.build/grpc-ecosystem/openapiv2
+    out: pb
+    opt:
+      - allow_merge=true
+      - merge_file_name=coloc
+      - json_names_for_fields=true

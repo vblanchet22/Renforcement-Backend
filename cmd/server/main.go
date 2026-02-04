@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -21,19 +23,19 @@ import (
 )
 
 type server struct {
-	cfg               *config.Config
-	pool              *pgxpool.Pool
-	jwtManager        *auth.JWTManager
-	authHandler       *handler.AuthHandler
-	userHandler       *handler.UserHandler
-	colocationHandler *handler.ColocationHandler
-	categoryHandler   *handler.CategoryHandler
-	expenseHandler    *handler.ExpenseHandler
-	balanceHandler    *handler.BalanceHandler
-	paymentHandler    *handler.PaymentHandler
-	decisionHandler   *handler.DecisionHandler
-	fundHandler          *handler.FundHandler
-	notificationHandler  *handler.NotificationHandler
+	cfg                 *config.Config
+	pool                *pgxpool.Pool
+	jwtManager          *auth.JWTManager
+	authHandler         *handler.AuthHandler
+	userHandler         *handler.UserHandler
+	colocationHandler   *handler.ColocationHandler
+	categoryHandler     *handler.CategoryHandler
+	expenseHandler      *handler.ExpenseHandler
+	balanceHandler      *handler.BalanceHandler
+	paymentHandler      *handler.PaymentHandler
+	decisionHandler     *handler.DecisionHandler
+	fundHandler         *handler.FundHandler
+	notificationHandler *handler.NotificationHandler
 }
 
 func main() {
@@ -93,19 +95,19 @@ func main() {
 	notificationHandler := handler.NewNotificationHandler(notificationService)
 
 	srv := &server{
-		cfg:               cfg,
-		pool:              pool,
-		jwtManager:        jwtManager,
-		authHandler:       authHandler,
-		userHandler:       userHandler,
-		colocationHandler: colocationHandler,
-		categoryHandler:   categoryHandler,
-		expenseHandler:    expenseHandler,
-		balanceHandler:    balanceHandler,
-		paymentHandler:    paymentHandler,
-		decisionHandler:   decisionHandler,
-		fundHandler:          fundHandler,
-		notificationHandler:  notificationHandler,
+		cfg:                 cfg,
+		pool:                pool,
+		jwtManager:          jwtManager,
+		authHandler:         authHandler,
+		userHandler:         userHandler,
+		colocationHandler:   colocationHandler,
+		categoryHandler:     categoryHandler,
+		expenseHandler:      expenseHandler,
+		balanceHandler:      balanceHandler,
+		paymentHandler:      paymentHandler,
+		decisionHandler:     decisionHandler,
+		fundHandler:         fundHandler,
+		notificationHandler: notificationHandler,
 	}
 
 	// Start gRPC server in goroutine
@@ -207,10 +209,16 @@ func (s *server) runHTTPGateway() error {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
+	httpMux.HandleFunc("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		http.ServeFile(w, r, "proto/pb/coloc.swagger.json")
+	})
+	httpMux.HandleFunc("/swagger/", swaggerUIHandler("/swagger/doc.json"))
 	httpMux.Handle("/", handler)
 
 	log.Printf("Gateway REST demarree sur le port %s", s.cfg.Server.HTTPPort)
 	log.Printf("API disponible sur http://localhost:%s/api/", s.cfg.Server.HTTPPort)
+	log.Printf("Swagger UI disponible sur http://localhost:%s/swagger/", s.cfg.Server.HTTPPort)
 
 	return http.ListenAndServe(":"+s.cfg.Server.HTTPPort, httpMux)
 }
@@ -239,4 +247,42 @@ func corsMiddleware(h http.Handler) http.Handler {
 
 		h.ServeHTTP(w, r)
 	})
+}
+
+func swaggerUIHandler(specURL string) http.HandlerFunc {
+	const pageTemplate = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Coloc API - Swagger UI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css" />
+    <style>
+      body { margin: 0; background: #fafafa; }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+    <script>
+      window.onload = () => {
+        SwaggerUIBundle({
+          url: "%s",
+          dom_id: '#swagger-ui',
+          presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+          ],
+          layout: "StandaloneLayout"
+        });
+      };
+    </script>
+  </body>
+</html>`
+	page := fmt.Sprintf(pageTemplate, specURL)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		io.WriteString(w, page)
+	}
 }

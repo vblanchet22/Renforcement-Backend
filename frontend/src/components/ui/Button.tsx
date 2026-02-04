@@ -14,6 +14,19 @@ interface ButtonProps {
   onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
 }
 
+const variants = {
+  primary: 'bg-primary text-white shadow-sm hover:bg-primary-dark active:shadow-none',
+  secondary: 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300',
+  ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-800',
+  danger: 'bg-red-500 text-white shadow-sm hover:bg-red-600 active:shadow-none',
+};
+
+const sizes = {
+  sm: 'h-8 px-3 text-xs gap-1.5 rounded-lg',
+  md: 'h-10 px-4 text-sm gap-2 rounded-xl',
+  lg: 'h-12 px-5 text-sm gap-2 rounded-xl',
+};
+
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -26,77 +39,26 @@ export function Button({
   type = 'button',
   onClick,
 }: ButtonProps) {
-  const baseStyles = `
-    inline-flex items-center justify-center gap-2
-    font-medium rounded-[var(--radius-sm)]
-    transition-all duration-200 ease-out
-    disabled:opacity-50 disabled:cursor-not-allowed
-    focus:outline-none focus:ring-2 focus:ring-offset-2
-  `;
-
-  const variants = {
-    primary: `
-      bg-[var(--color-primary)] text-white
-      hover:bg-[var(--color-primary-hover)]
-      focus:ring-[var(--color-primary)]
-      shadow-[var(--shadow-sm)]
-      hover:shadow-[var(--shadow-md)]
-    `,
-    secondary: `
-      bg-[var(--color-surface)] text-[var(--color-text)]
-      border border-[var(--color-border)]
-      hover:bg-[var(--color-surface-hover)]
-      hover:border-[var(--color-text-muted)]
-      focus:ring-[var(--color-primary)]
-    `,
-    ghost: `
-      bg-transparent text-[var(--color-text-secondary)]
-      hover:bg-[var(--color-surface-hover)]
-      hover:text-[var(--color-text)]
-      focus:ring-[var(--color-primary)]
-    `,
-    danger: `
-      bg-[var(--color-danger)] text-white
-      hover:bg-red-600
-      focus:ring-[var(--color-danger)]
-    `,
-  };
-
-  const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2.5 text-sm',
-    lg: 'px-6 py-3 text-base',
-  };
+  const isDisabled = disabled || isLoading;
 
   return (
     <motion.button
-      whileHover={{ scale: disabled || isLoading ? 1 : 1.02 }}
-      whileTap={{ scale: disabled || isLoading ? 1 : 0.98 }}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={disabled || isLoading}
+      whileHover={isDisabled ? undefined : { scale: 1.01 }}
+      whileTap={isDisabled ? undefined : { scale: 0.98 }}
+      className={`
+        inline-flex items-center justify-center font-medium
+        transition-colors duration-150 cursor-pointer
+        disabled:opacity-50 disabled:cursor-not-allowed
+        ${variants[variant]} ${sizes[size]} ${className}
+      `}
+      disabled={isDisabled}
       type={type}
       onClick={onClick}
     >
       {isLoading ? (
-        <svg
-          className="animate-spin h-4 w-4"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-          />
+        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
       ) : (
         leftIcon

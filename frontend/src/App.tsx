@@ -4,16 +4,15 @@ import { ColocationProvider } from './context/ColocationContext';
 import { AppLayout } from './components/layout';
 import { Login, Register, Dashboard, Expenses, Balances } from './pages';
 
-// Protected route wrapper
 function ProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-full border-4 border-[var(--color-primary)] border-t-transparent animate-spin mx-auto mb-4" />
-          <p className="text-[var(--color-text-muted)]">Chargement...</p>
+          <div className="w-10 h-10 rounded-full border-[3px] border-primary border-t-transparent animate-spin mx-auto mb-4" />
+          <p className="text-slate-400 text-sm">Chargement...</p>
         </div>
       </div>
     );
@@ -32,14 +31,13 @@ function ProtectedRoute() {
   );
 }
 
-// Public route wrapper (redirect if authenticated)
 function PublicRoute() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-4 border-[var(--color-primary)] border-t-transparent animate-spin" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-[3px] border-primary border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -51,12 +49,11 @@ function PublicRoute() {
   return <Outlet />;
 }
 
-// Placeholder pages
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
-      <h1 className="text-display text-3xl text-[var(--color-text)] mb-2">{title}</h1>
-      <p className="text-[var(--color-text-secondary)]">Cette page est en cours de développement</p>
+      <h1 className="font-display text-3xl text-slate-900 mb-2">{title}</h1>
+      <p className="text-slate-500">Cette page est en cours de développement</p>
     </div>
   );
 }
@@ -66,13 +63,11 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Public routes */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
           </Route>
 
-          {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/expenses" element={<Expenses />} />
@@ -84,7 +79,6 @@ function App() {
             <Route path="/settings" element={<PlaceholderPage title="Paramètres" />} />
           </Route>
 
-          {/* Redirects */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

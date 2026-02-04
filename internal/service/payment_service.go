@@ -23,9 +23,27 @@ func NewPaymentService(repo *postgres.PaymentRepository, colocationRepo *postgre
 	}
 }
 
+// ensureMembership verifies user is a member and returns the userID
+func (s *PaymentService) ensureMembership(ctx context.Context, colocationID string) (string, error) {
+	userID, err := auth.GetUserIDFromContext(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	isMember, err := s.colocationRepo.IsMember(ctx, colocationID, userID)
+	if err != nil {
+		return "", fmt.Errorf("erreur lors de la verification: %w", err)
+	}
+	if !isMember {
+		return "", fmt.Errorf("vous n'etes pas membre de cette colocation")
+	}
+
+	return userID, nil
+}
+
 // Create creates a new payment (declare reimbursement)
 func (s *PaymentService) Create(ctx context.Context, colocationID, toUserID string, amount float64, note *string) (*domain.Payment, error) {
-	userID, err := auth.GetUserIDFromContext(ctx)
+	userID, err := s.ensureMembership(ctx, colocationID)
 	if err != nil {
 		return nil, err
 	}
@@ -34,21 +52,8 @@ func (s *PaymentService) Create(ctx context.Context, colocationID, toUserID stri
 		return nil, fmt.Errorf("vous ne pouvez pas vous payer vous-meme")
 	}
 
-	// Check membership of both users
-	isMember, err := s.colocationRepo.IsMember(ctx, colocationID, userID)
-	if err != nil {
-		return nil, fmt.Errorf("erreur lors de la verification: %w", err)
-	}
-	if !isMember {
-		return nil, fmt.Errorf("vous n'etes pas membre de cette colocation")
-	}
-
-	isRecipientMember, err := s.colocationRepo.IsMember(ctx, colocationID, toUserID)
-	if err != nil {
-		return nil, fmt.Errorf("erreur lors de la verification: %w", err)
-	}
-	if !isRecipientMember {
-		return nil, fmt.Errorf("le destinataire n'est pas membre de cette colocation")
+	if err := s.verifyRecipientMembership(ctx, colocationID, toUserID); err != nil {
+		return nil, err
 	}
 
 	if amount <= 0 {
@@ -70,19 +75,22 @@ func (s *PaymentService) Create(ctx context.Context, colocationID, toUserID stri
 	return s.repo.GetByID(ctx, payment.ID)
 }
 
-// GetByID retrieves a payment by ID
-func (s *PaymentService) GetByID(ctx context.Context, colocationID, paymentID string) (*domain.Payment, error) {
-	userID, err := auth.GetUserIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+// verifyRecipientMembership checks if the recipient is a member of the colocation
+func (s *PaymentService) verifyRecipientMembership(ctx context.Context, colocationID, userID string) error {
 	isMember, err := s.colocationRepo.IsMember(ctx, colocationID, userID)
 	if err != nil {
-		return nil, fmt.Errorf("erreur lors de la verification: %w", err)
+		return fmt.Errorf("erreur lors de la verification: %w", err)
 	}
 	if !isMember {
-		return nil, fmt.Errorf("vous n'etes pas membre de cette colocation")
+		return fmt.Errorf("le destinataire n'est pas membre de cette colocation")
+	}
+	return nil
+}
+
+// GetByID retrieves a payment by ID
+func (s *PaymentService) GetByID(ctx context.Context, colocationID, paymentID string) (*domain.Payment, error) {
+	if _, err := s.ensureMembership(ctx, colocationID); err != nil {
+		return nil, err
 	}
 
 	payment, err := s.repo.GetByID(ctx, paymentID)
@@ -108,25 +116,11 @@ type ListPaymentsInput struct {
 
 // List lists payments for a colocation
 func (s *PaymentService) List(ctx context.Context, input ListPaymentsInput) ([]domain.Payment, int, error) {
-	userID, err := auth.GetUserIDFromContext(ctx)
-	if err != nil {
+	if _, err := s.ensureMembership(ctx, input.ColocationID); err != nil {
 		return nil, 0, err
 	}
 
-	isMember, err := s.colocationRepo.IsMember(ctx, input.ColocationID, userID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("erreur lors de la verification: %w", err)
-	}
-	if !isMember {
-		return nil, 0, fmt.Errorf("vous n'etes pas membre de cette colocation")
-	}
-
-	if input.Page < 1 {
-		input.Page = 1
-	}
-	if input.PageSize < 1 || input.PageSize > 100 {
-		input.PageSize = 20
-	}
+	input.Page, input.PageSize = normalizePagination(input.Page, input.PageSize)
 
 	return s.repo.ListByColocation(ctx, input.ColocationID, input.Status, input.FromUserID, input.ToUserID, input.Page, input.PageSize)
 }
@@ -138,12 +132,9 @@ func (s *PaymentService) Confirm(ctx context.Context, colocationID, paymentID st
 		return nil, err
 	}
 
-	payment, err := s.repo.GetByID(ctx, paymentID)
+	payment, err := s.getPaymentForAction(ctx, colocationID, paymentID)
 	if err != nil {
-		return nil, fmt.Errorf("erreur lors de la recuperation: %w", err)
-	}
-	if payment == nil || payment.ColocationID != colocationID {
-		return nil, fmt.Errorf("paiement introuvable")
+		return nil, err
 	}
 
 	if payment.ToUserID != userID {
@@ -168,12 +159,9 @@ func (s *PaymentService) Reject(ctx context.Context, colocationID, paymentID str
 		return nil, err
 	}
 
-	payment, err := s.repo.GetByID(ctx, paymentID)
+	payment, err := s.getPaymentForAction(ctx, colocationID, paymentID)
 	if err != nil {
-		return nil, fmt.Errorf("erreur lors de la recuperation: %w", err)
-	}
-	if payment == nil || payment.ColocationID != colocationID {
-		return nil, fmt.Errorf("paiement introuvable")
+		return nil, err
 	}
 
 	if payment.ToUserID != userID {
@@ -198,12 +186,9 @@ func (s *PaymentService) Cancel(ctx context.Context, colocationID, paymentID str
 		return err
 	}
 
-	payment, err := s.repo.GetByID(ctx, paymentID)
+	payment, err := s.getPaymentForAction(ctx, colocationID, paymentID)
 	if err != nil {
-		return fmt.Errorf("erreur lors de la recuperation: %w", err)
-	}
-	if payment == nil || payment.ColocationID != colocationID {
-		return fmt.Errorf("paiement introuvable")
+		return err
 	}
 
 	if payment.FromUserID != userID {
@@ -215,4 +200,16 @@ func (s *PaymentService) Cancel(ctx context.Context, colocationID, paymentID str
 	}
 
 	return s.repo.Delete(ctx, paymentID)
+}
+
+// getPaymentForAction retrieves a payment and validates it belongs to the colocation
+func (s *PaymentService) getPaymentForAction(ctx context.Context, colocationID, paymentID string) (*domain.Payment, error) {
+	payment, err := s.repo.GetByID(ctx, paymentID)
+	if err != nil {
+		return nil, fmt.Errorf("erreur lors de la recuperation: %w", err)
+	}
+	if payment == nil || payment.ColocationID != colocationID {
+		return nil, fmt.Errorf("paiement introuvable")
+	}
+	return payment, nil
 }

@@ -4,6 +4,15 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/vblanchet22/back_coloc/internal/constants"
+)
+
+// Default server ports
+const (
+	defaultPostgresPort = "5432"
+	defaultGRPCPort     = "50051"
+	defaultHTTPPort     = "8080"
 )
 
 // Config holds all application configuration
@@ -41,20 +50,20 @@ func Load() *Config {
 	return &Config{
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnv("DB_PORT", "5432"),
+			Port:     getEnv("DB_PORT", defaultPostgresPort),
 			User:     getEnv("DB_USER", "coloc_user"),
 			Password: getEnv("DB_PASSWORD", "coloc_password"),
 			Name:     getEnv("DB_NAME", "coloc_db"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
 		Server: ServerConfig{
-			GRPCPort: getEnv("GRPC_PORT", "50051"),
-			HTTPPort: getEnv("HTTP_PORT", "8080"),
+			GRPCPort: getEnv("GRPC_PORT", defaultGRPCPort),
+			HTTPPort: getEnv("HTTP_PORT", defaultHTTPPort),
 		},
 		JWT: JWTConfig{
 			Secret:             getEnv("JWT_SECRET", "change-me-in-production"),
-			AccessTokenExpiry:  getDurationEnv("JWT_EXPIRY", 24*time.Hour),
-			RefreshTokenExpiry: getDurationEnv("REFRESH_TOKEN_EXPIRY", 168*time.Hour),
+			AccessTokenExpiry:  getDurationEnv("JWT_EXPIRY", constants.DefaultAccessTokenExpiry),
+			RefreshTokenExpiry: getDurationEnv("REFRESH_TOKEN_EXPIRY", constants.DefaultRefreshTokenExpiry),
 		},
 	}
 }
