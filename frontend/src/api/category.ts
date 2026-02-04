@@ -22,28 +22,39 @@ interface CategoryStatsParams {
 
 export const categoryApi = {
   async list(colocationId: string): Promise<Category[]> {
-    const response = await api.get<{ categories: Category[] }>('/v1/categories', {
-      params: { colocation_id: colocationId },
-    });
+    const response = await api.get<{ categories: Category[] }>(
+      `/colocations/${colocationId}/categories`
+    );
     return response.data.categories || [];
   },
 
   async create(data: CreateCategoryRequest): Promise<Category> {
-    const response = await api.post<Category>('/v1/categories', data);
+    const { colocation_id, ...body } = data;
+    const response = await api.post<Category>(
+      `/colocations/${colocation_id}/categories`,
+      body
+    );
     return response.data;
   },
 
-  async update(id: string, data: UpdateCategoryRequest): Promise<Category> {
-    const response = await api.put<Category>(`/v1/categories/${id}`, data);
+  async update(colocationId: string, id: string, data: UpdateCategoryRequest): Promise<Category> {
+    const response = await api.put<Category>(
+      `/colocations/${colocationId}/categories/${id}`,
+      data
+    );
     return response.data;
   },
 
-  async delete(id: string): Promise<void> {
-    await api.delete(`/v1/categories/${id}`);
+  async delete(colocationId: string, id: string): Promise<void> {
+    await api.delete(`/colocations/${colocationId}/categories/${id}`);
   },
 
   async getStats(params: CategoryStatsParams): Promise<CategoryStat[]> {
-    const response = await api.get<{ stats: CategoryStat[] }>('/v1/categories/stats', { params });
+    const { colocation_id, ...queryParams } = params;
+    const response = await api.get<{ stats: CategoryStat[] }>(
+      `/colocations/${colocation_id}/categories/stats`,
+      { params: queryParams }
+    );
     return response.data.stats || [];
   },
 };

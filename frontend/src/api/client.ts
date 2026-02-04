@@ -54,7 +54,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const response = await axios.post<AuthResponse>(`${API_BASE_URL}/v1/auth/refresh`, {
+        const response = await axios.post<AuthResponse>(`${API_BASE_URL}/auth/refresh`, {
           refresh_token: refreshToken,
         });
 

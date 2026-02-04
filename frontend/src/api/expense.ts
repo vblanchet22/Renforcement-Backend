@@ -53,62 +53,73 @@ interface CreateRecurringExpenseRequest {
 
 export const expenseApi = {
   async list(params: ListExpensesParams): Promise<{ expenses: Expense[]; total: number }> {
-    const response = await api.get<{ expenses: Expense[]; total: number }>('/v1/expenses', {
-      params,
-    });
+    const { colocation_id, ...queryParams } = params;
+    const response = await api.get<{ expenses: Expense[]; total: number }>(
+      `/colocations/${colocation_id}/expenses`,
+      { params: queryParams }
+    );
     return { expenses: response.data.expenses || [], total: response.data.total || 0 };
   },
 
-  async get(id: string): Promise<Expense> {
-    const response = await api.get<Expense>(`/v1/expenses/${id}`);
+  async get(colocationId: string, id: string): Promise<Expense> {
+    const response = await api.get<Expense>(`/colocations/${colocationId}/expenses/${id}`);
     return response.data;
   },
 
   async create(data: CreateExpenseRequest): Promise<Expense> {
-    const response = await api.post<Expense>('/v1/expenses', data);
+    const { colocation_id, ...body } = data;
+    const response = await api.post<Expense>(`/colocations/${colocation_id}/expenses`, body);
     return response.data;
   },
 
-  async update(id: string, data: UpdateExpenseRequest): Promise<Expense> {
-    const response = await api.put<Expense>(`/v1/expenses/${id}`, data);
+  async update(colocationId: string, id: string, data: UpdateExpenseRequest): Promise<Expense> {
+    const response = await api.put<Expense>(`/colocations/${colocationId}/expenses/${id}`, data);
     return response.data;
   },
 
-  async delete(id: string): Promise<void> {
-    await api.delete(`/v1/expenses/${id}`);
+  async delete(colocationId: string, id: string): Promise<void> {
+    await api.delete(`/colocations/${colocationId}/expenses/${id}`);
   },
 
   // Recurring expenses
   async listRecurring(colocationId: string): Promise<RecurringExpense[]> {
     const response = await api.get<{ recurring_expenses: RecurringExpense[] }>(
-      '/v1/recurring-expenses',
-      { params: { colocation_id: colocationId } }
+      `/colocations/${colocationId}/recurring-expenses`
     );
     return response.data.recurring_expenses || [];
   },
 
   async createRecurring(data: CreateRecurringExpenseRequest): Promise<RecurringExpense> {
-    const response = await api.post<RecurringExpense>('/v1/recurring-expenses', data);
+    const { colocation_id, ...body } = data;
+    const response = await api.post<RecurringExpense>(
+      `/colocations/${colocation_id}/recurring-expenses`,
+      body
+    );
     return response.data;
   },
 
   async updateRecurring(
+    colocationId: string,
     id: string,
     data: Partial<CreateRecurringExpenseRequest>
   ): Promise<RecurringExpense> {
-    const response = await api.put<RecurringExpense>(`/v1/recurring-expenses/${id}`, data);
+    const response = await api.put<RecurringExpense>(
+      `/colocations/${colocationId}/recurring-expenses/${id}`,
+      data
+    );
     return response.data;
   },
 
-  async deleteRecurring(id: string): Promise<void> {
-    await api.delete(`/v1/recurring-expenses/${id}`);
+  async deleteRecurring(colocationId: string, id: string): Promise<void> {
+    await api.delete(`/colocations/${colocationId}/recurring-expenses/${id}`);
   },
 
   // Forecast
   async getForecast(colocationId: string, months: number = 3): Promise<MonthlyForecast[]> {
-    const response = await api.get<{ forecasts: MonthlyForecast[] }>('/v1/expenses/forecast', {
-      params: { colocation_id: colocationId, months },
-    });
+    const response = await api.get<{ forecasts: MonthlyForecast[] }>(
+      `/colocations/${colocationId}/expenses/forecast`,
+      { params: { months } }
+    );
     return response.data.forecasts || [];
   },
 };
